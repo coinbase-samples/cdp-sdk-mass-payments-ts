@@ -1,0 +1,37 @@
+{
+  "name": "cdp-mass-payouts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.788.0",
+    "@aws-sdk/lib-dynamodb": "^3.789.0",
+    "@coinbase/cdp-sdk": "^1.0.1",
+    "@types/mongodb": "^4.0.7",
+    "jose": "^6.0.10",
+    "mongodb": "^6.15.0",
+    "next": "15.3.0",
+    "permissionless": "^0.2.41",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
+    "viem": "^2.26.5",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.0",
+    "@eslint/eslintrc": "^3"
+  }
+}
