@@ -26,6 +26,16 @@ export async function getOrCreateEvmAccount() {
   evmAccount = await cdpClient.evm.createAccount();
 
   await createWallet(id, evmAccount.address);
+
+  const { transactionHash } = await cdpClient.evm.requestFaucet({
+    address: evmAccount.address,
+    network: "base-sepolia",
+    token: "eth",
+  });
+
+  console.log(
+    `Requested funds from faucet. Transaction hash: ${transactionHash}`
+  );
 }
 
 export { evmAccount };
