@@ -1,8 +1,8 @@
 // List of required environment variables
 const requiredEnvVars = [
   // Database Configuration
-  'MONGODB_URI',
-  'MONGODB_DB_NAME',
+  'DATABASE_URL',
+  'NODE_ENV',
 
   // CDP Configuration
   'CDP_API_KEY_ID',
