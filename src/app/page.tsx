@@ -1,11 +1,23 @@
+'use client';
+
 import { Header } from "./components/Header";
 import { Payout } from "./components/Payout";
+import { Login } from "./components/Login";
+import { useAuth } from "./context/AuthContext";
 
-export default function Home() {
+function AppContent() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <Payout />
+      {isAuthenticated ? <Payout /> : <Login />}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <AppContent />
   );
 }

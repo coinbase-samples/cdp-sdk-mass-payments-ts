@@ -6,17 +6,24 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "setup:local": "node scripts/setup-local.js",
+    "test:db": "node scripts/test-db.js"
   },
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.0.1",
-    "@neondatabase/serverless": "^1.0.0",
+    "@coinbase/onchainkit": "^0.38.7",
+    "@tanstack/react-query": "^5.74.4",
     "jose": "^6.0.10",
     "next": "15.3.0",
+    "next-auth": "^4.24.11",
+    "pg": "^8.14.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
+    "siwe": "^2.1.5",
     "viem": "^2.26.5",
+    "wagmi": "^2.14.16",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -28,6 +35,7 @@
     "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.3.0",
-    "@eslint/eslintrc": "^3"
+    "@eslint/eslintrc": "^3",
+    "dotenv": "^16.4.5"
   }
 }

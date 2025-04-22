@@ -8,8 +8,10 @@ const requiredEnvVars = [
   'CDP_API_KEY_ID',
   'CDP_API_KEY_SECRET',
   'CDP_WALLET_SECRET',
-  'CDP_API_KEY_PRIVATE_KEY',
-  'CDP_API_KEY_NAME',
+
+  // Auth Configuration
+  'NEXTAUTH_URL',
+  'NEXTAUTH_SECRET',
 ] as const;
 
 type EnvVar = typeof requiredEnvVars[number];
@@ -19,8 +21,16 @@ type EnvConfig = {
   [K in EnvVar]: string;
 };
 
+// Cache for validated config
+let validatedConfig: EnvConfig | null = null;
+
 // Validate environment variables
 const validateEnv = (): EnvConfig => {
+  // Return cached config if it exists
+  if (validatedConfig) {
+    return validatedConfig;
+  }
+
   const missingVars: string[] = [];
   const config: Partial<EnvConfig> = {};
 
@@ -37,7 +47,10 @@ const validateEnv = (): EnvConfig => {
     throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
   }
 
-  return config as EnvConfig;
+  // Cache the validated config
+  validatedConfig = config as EnvConfig;
+  console.log('Environment variables validated successfully');
+  return validatedConfig;
 };
 
 // Export validated config
