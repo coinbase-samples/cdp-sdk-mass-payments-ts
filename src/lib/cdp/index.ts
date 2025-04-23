@@ -1,4 +1,4 @@
-import { CdpClient } from "@coinbase/cdp-sdk";
+import { CdpClient, EvmServerAccount } from "@coinbase/cdp-sdk";
 import { config } from '../config';
 import { getWalletAddress, createWallet } from '../db';
 import { createHash } from 'crypto';
@@ -12,7 +12,7 @@ const cdpClient: CdpClient = new CdpClient({
   walletSecret: config.CDP_WALLET_SECRET,
 });
 
-export async function getOrCreateEvmAccount(params: GetOrCreateEvmAccountParams) {
+export async function getOrCreateEvmAccount(params: GetOrCreateEvmAccountParams): Promise<EvmServerAccount> {
   // Check if env variables are properly set
   if (!config.DATABASE_URL) {
     throw new Error("Database configuration is not properly set");
@@ -25,12 +25,14 @@ export async function getOrCreateEvmAccount(params: GetOrCreateEvmAccountParams)
 
     const existingWallet = await getWalletAddress(id);
     if (existingWallet) {
-      return existingWallet.evmAccount;
+      return await cdpClient.evm.getAccount({ address: existingWallet.address });
     }
 
-    const evmAccount = await cdpClient.evm.createAccount();
+    const evmAccount: EvmServerAccount = await cdpClient.evm.createAccount();
 
     await createWallet(id, evmAccount.address);
+
+    return evmAccount;
   } catch (error) {
     console.error("Error creating wallet:", error);
     throw error;

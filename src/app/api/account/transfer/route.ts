@@ -23,7 +23,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return new NextResponse("Invalid request", { status: 400 });
   }
 
-  try {
+  return NextResponse.json({ message: 'Request received' }, { status: 200 });
+
+  /*try {
     const evmAccount = await getOrCreateEvmAccount({ accountId: address });
     const viemAccount = toAccount(evmAccount);
     const walletClient = createWalletClient({
@@ -80,7 +82,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
-  }
+  }*/
 }
 
 const executeTransfer = async (

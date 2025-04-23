@@ -53,6 +53,8 @@ export const Payout = () => {
     if (payoutRows.length > 1) {
       setPayoutRows(payoutRows.filter((_, i) => i !== index))
       setError(null)
+    } else {
+      setPayoutRows([{ recipientId: '', amount: '' }])
     }
   }
 
@@ -65,10 +67,10 @@ export const Payout = () => {
       try {
         const text = e.target?.result as string
         const rows = text.split('\n').map(row => row.trim()).filter(row => row)
-        
+
         // Skip header row if it exists
         const dataRows = rows[0].includes('recipientId') ? rows.slice(1) : rows
-        
+
         if (dataRows.length > MAX_ROWS) {
           setError(`CSV contains too many rows. Maximum allowed is ${MAX_ROWS}`)
           return
@@ -105,11 +107,8 @@ export const Payout = () => {
       })
 
       if (!response.ok) {
-        throw new Error('Transfer failed')
+        throw new Error('Transfer failed', { cause: await response.json() })
       }
-
-      const result = await response.json()
-      console.log('Transfer successful:', result)
     } catch (error) {
       console.error('Transfer error:', error)
     }

@@ -10,7 +10,12 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const account = await getOrCreateEvmAccount({ accountId: session.address })
+  try {
+    const account = await getOrCreateEvmAccount({ accountId: session.address })
 
-  return NextResponse.json({ address: account.address })
+    return NextResponse.json({ address: account.address })
+  } catch (error) {
+    console.error("Error creating wallet:", error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
 }

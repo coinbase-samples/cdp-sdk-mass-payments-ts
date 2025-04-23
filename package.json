@@ -6,9 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "setup:local": "node scripts/setup-local.js",
-    "test:db": "node scripts/test-db.js"
+    "lint": "next lint"
   },
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.0.1",

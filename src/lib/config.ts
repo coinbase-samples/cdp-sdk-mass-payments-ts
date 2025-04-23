@@ -52,7 +52,6 @@ const validateEnv = (): EnvConfig => {
 
   // Cache the validated config
   validatedConfig = config as EnvConfig;
-  console.log('Environment variables validated successfully');
   return validatedConfig;
 };
 
