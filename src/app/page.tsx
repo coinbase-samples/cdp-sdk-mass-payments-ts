@@ -3,21 +3,17 @@
 import { Header } from "./components/Header";
 import { Payout } from "./components/Payout";
 import { Login } from "./components/Login";
-import { useAuth } from "./context/AuthContext";
+import { useSession } from "next-auth/react";
 
-function AppContent() {
-  const { isAuthenticated } = useAuth();
+export default function Home() {
+  const { data: session, status } = useSession()
+
+  if (status === 'loading') return <p>Loading session...</p>
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      {isAuthenticated ? <Payout /> : <Login />}
+      {session?.user ? <Payout /> : <Login />}
     </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <AppContent />
   );
 }

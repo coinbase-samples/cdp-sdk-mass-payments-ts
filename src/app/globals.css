@@ -24,3 +24,19 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+:root {
+  --coinbase-blue: #0052ff; /* define your custom color */
+}
+
+.connectBttn {
+  font-size: 16px;
+  font-weight: bold;
+  padding: 8px 16px;
+  background-color: var(--coinbase-blue);
+  color: white;
+  border-radius: 30px;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}

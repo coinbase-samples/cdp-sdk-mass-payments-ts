@@ -12,6 +12,9 @@ const requiredEnvVars = [
   // Auth Configuration
   'NEXTAUTH_URL',
   'NEXTAUTH_SECRET',
+
+  // RPC Endpoint
+  'BASE_SEPOLIA_NODE_URL',
 ] as const;
 
 type EnvVar = typeof requiredEnvVars[number];

@@ -1,93 +1,105 @@
-import { evmAccount } from "@/lib/cdp/sdk";
-import { createWalletClient, createPublicClient, erc20Abi, http, zeroAddress } from "viem";
+import { config } from "@/lib/config";
+import { getOrCreateEvmAccount } from "@/lib/cdp";
+import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
+import { createWalletClient, createPublicClient, http, parseEther, zeroAddress } from "viem";
 import { toAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
+import { authOptions } from "../../auth/[...nextauth]/route";
+import { EvmServerAccount } from "@coinbase/cdp-sdk";
 
-// USDC contract addresses for Base Sepolia
-const USDC_CONTRACT = {
-    testnet: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-    mainnet: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-};
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  const session = await getServerSession(authOptions)
 
-export async function POST(request: Request): Promise<Response> {
-    try {
-        // @todo - validate data
-        const { token, data } = await request.json();
+  if (!session?.address) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
-        if (!token || !data) {
-            return new Response("Invalid request", { status: 400 });
+  const address = session.address!;
+
+  const { token, data } = await request.json();
+
+  if (!token || !data) {
+    return new NextResponse("Invalid request", { status: 400 });
+  }
+
+  try {
+    const evmAccount = await getOrCreateEvmAccount({ accountId: address });
+    const viemAccount = toAccount(evmAccount);
+    const walletClient = createWalletClient({
+      account: viemAccount,
+      transport: http(config.BASE_SEPOLIA_NODE_URL),
+      chain: baseSepolia,
+    });
+    const publicClient = createPublicClient({
+      chain: baseSepolia,
+      transport: http(),
+    });
+
+    // Convert all amounts to numbers and sum them up
+    const totalAmount = data
+      .map((row: { amount: string }) => parseFloat(row.amount))
+      .reduce((sum: number, amount: number) => sum + amount, 0);
+
+    // Native (ETH) transfer
+    if (token == zeroAddress) {
+      const balance = await publicClient.getBalance({ address: viemAccount.address });
+      const totalAmountWei = BigInt(Math.floor(totalAmount * 10 ** 18));
+
+      if (balance < totalAmountWei) {
+        return new NextResponse("Insufficient balance", { status: 400 });
+      }
+
+      // Execute all transfers concurrently and wait for all to complete
+      const transferPromises = data.map(async (row: { to: string; amount: string }) => {
+        try {
+          await executeTransfer(walletClient, publicClient, row.to, row.amount);
+          return { success: true, to: row.to };
+        } catch (error) {
+          return { success: false, to: row.to, error: error instanceof Error ? error.message : 'Unknown error' };
         }
+      });
 
-        const viemAccount = toAccount(evmAccount);
-        const walletClient = createWalletClient({
-            account: viemAccount,
-            transport: http(),
-            chain: baseSepolia,
-        });
-        const client = createPublicClient({
-            chain: baseSepolia,
-            transport: http(),
-        });
+      const results = await Promise.all(transferPromises);
 
-        // Convert all amounts to numbers and sum them up
-        const totalAmount = data
-            .map((row: { amount: string }) => parseFloat(row.amount))
-            .reduce((sum: number, amount: number) => sum + amount, 0);
+      // Check if any transfers failed
+      const failedTransfers = results.filter(result => !result.success);
+      if (failedTransfers.length > 0) {
+        return NextResponse.json({
+          error: 'Some transfers failed',
+          failedTransfers
+        }, { status: 500 });
+      }
 
-        // Native (ETH) transfer
-        if (token == zeroAddress) {
-            const balance = await client.getBalance({ address: viemAccount.address });
-            // Convert totalAmount to wei (1 ETH = 10^18 wei)
-            const totalAmountWei = BigInt(Math.floor(totalAmount * 10 ** 18));
-
-            if (balance < totalAmountWei) {
-                return new Response("Insufficient balance", { status: 400 });
-            }
-
-            // Prepare transfers
-            for (const row of data) {
-                const amountWei = BigInt(Math.floor(parseFloat(row.amount) * 10 ** 18));
-                await walletClient.writeContract({
-                    address: zeroAddress,
-                    abi: erc20Abi,
-                    functionName: 'transfer',
-                    args: [row.wallet as `0x${string}`, amountWei]
-                });
-            }
-        }
-        // USDC Token Transfer
-        else if (token == USDC_CONTRACT.testnet || token == USDC_CONTRACT.mainnet) {
-            // USDC has 6 decimals, so we need to multiply by 10^6
-            const totalAmountWei = BigInt(Math.floor(totalAmount * 10 ** 6));
-            
-            // Check USDC balance
-            const balance = await client.readContract({
-                address: token as `0x${string}`,
-                abi: erc20Abi,
-                functionName: 'balanceOf',
-                args: [viemAccount.address]
-            });
-
-            if (balance < totalAmountWei) {
-                return new Response("Insufficient USDC balance", { status: 400 });
-            }
-
-            // Prepare transfers
-            for (const row of data) {
-                const amountWei = BigInt(Math.floor(parseFloat(row.amount) * 10 ** 6));
-                await walletClient.writeContract({
-                    address: token as `0x${string}`,
-                    abi: erc20Abi,
-                    functionName: 'transfer',
-                    args: [row.wallet as `0x${string}`, amountWei]
-                });
-            }
-        }
-        else {
-            return new Response("Unsupported token", { status: 400 });
-        }
-        return new Response("OK", { status: 200 });
-    } catch (error) {
-        return new Response("internal failure", { status: 500 });
+      return NextResponse.json({ success: true, results });
+    } else {
+      return new NextResponse("Unsupported token", { status: 400 });
     }
+  } catch (error) {
+    return NextResponse.json({
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
+  }
+}
+
+const executeTransfer = async (
+  walletClient: any,
+  publicClient: any,
+  to: string,
+  amount: string
+): Promise<void> => {
+  const recipientEvmAccount: EvmServerAccount = await getOrCreateEvmAccount({ accountId: to });
+
+  const hash = await walletClient.sendTransaction({
+    to: recipientEvmAccount.address as `0x${string}`,
+    value: parseEther(amount),
+  });
+
+  // Wait for transaction confirmation
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+  if (receipt.status !== 'success') {
+    throw new Error(`Transaction failed for recipient ${to}`);
+  }
 }

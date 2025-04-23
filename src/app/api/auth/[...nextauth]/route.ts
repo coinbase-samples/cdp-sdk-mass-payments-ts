@@ -2,6 +2,7 @@ import NextAuth, { SessionStrategy } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { SiweMessage } from "siwe"
 import { getServerSession } from "next-auth"
+import { config } from "@/lib/config"
 
 export const authOptions = {
   providers: [
@@ -14,7 +15,7 @@ export const authOptions = {
       async authorize(credentials, req) {
         try {
           const siwe = new SiweMessage(JSON.parse(credentials?.message || "{}"))
-          const nextAuthUrl = new URL(process.env.NEXTAUTH_URL!)
+          const nextAuthUrl = new URL(config.NEXTAUTH_URL!)
           const domain = nextAuthUrl.host
 
           const nonce = (await getServerSession(authOptions))?.csrfToken
@@ -41,12 +42,11 @@ export const authOptions = {
   session: {
     strategy: "jwt" as SessionStrategy,
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: config.NEXTAUTH_SECRET,
   callbacks: {
     async session({ session, token }: { session: any; token: any }) {
       session.address = token.sub
       session.user.name = token.sub
-      session.user.image = "https://www.fillmurray.com/128/128"
       return session
     },
   },
