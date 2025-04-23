@@ -7,7 +7,6 @@
         "@coinbase/cdp-sdk": "^1.0.1",
         "@coinbase/onchainkit": "^0.38.7",
         "@tanstack/react-query": "^5.74.4",
-        "jose": "^6.0.10",
         "next": "15.3.0",
         "next-auth": "^4.24.11",
         "pg": "^8.14.1",
@@ -17,7 +16,6 @@
         "siwe": "^2.1.5",
         "viem": "^2.26.5",
         "wagmi": "^2.14.16",
-        "zod": "^3.24.2",
       },
       "devDependencies": {
         "@eslint/eslintrc": "^3",
