@@ -4,7 +4,7 @@ import { FaDiscord, FaGithub, FaLightbulb } from "react-icons/fa";
 
 export const Header = () => {
     return (
-        <header className="w-full py-6 px-8 bg-white shadow-md">
+        <header className="w-full py-6 px-8 bg-white border-b border-gray-200 shadow-[0_2px_4px_0_rgba(0,0,0,0.1)]">
             <nav className="flex justify-between items-center">
               <Link href="/">
                 <Image src="/logo.png" alt="CDP SDK Logo" width={120} height={40} />
@@ -16,7 +16,7 @@ export const Header = () => {
                   </a>
                 </li>
                 <li>
-                  <a href="https://github.com/nmorgan-cb/cdp-mass-payouts" className="text-gray-700 hover:text-blue-600 transition-colors" target="_blank" rel="noopener noreferrer">
+                  <a href="https://github.com/coinbase-samples/cdp-sdk-mass-payments-ts" className="text-gray-700 hover:text-blue-600 transition-colors" target="_blank" rel="noopener noreferrer">
                     <FaGithub size={24} />
                   </a>
                 </li>

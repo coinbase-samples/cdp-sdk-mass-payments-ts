@@ -22,7 +22,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchEvmAddress = async () => {
     try {
-      const res = await fetch('/api/evm-account')
+      const res = await fetch('/api/account')
       if (!res.ok) throw new Error('Failed to fetch evm account')
       const { address } = await res.json()
       setEvmAddress(address)

@@ -2,7 +2,9 @@ import { CdpClient } from "@coinbase/cdp-sdk";
 import { config } from '../config';
 import { getWalletAddress, createWallet } from '../db';
 import { createHash } from 'crypto';
-import { GetOrCreateEvmAccountParams } from "../types/CDP";
+import { GetOrCreateEvmAccountParams, RequestFaucetParams } from "../types/cdp";
+import { createPublicClient, http } from "viem";
+import { baseSepolia } from "viem/chains";
 
 const cdpClient: CdpClient = new CdpClient({
   apiKeyId: config.CDP_API_KEY_ID,
@@ -33,5 +35,22 @@ export async function getOrCreateEvmAccount(params: GetOrCreateEvmAccountParams)
     console.error("Error creating wallet:", error);
     throw error;
   }
+}
+
+export async function requestFaucetFunds(params: RequestFaucetParams) {
+  const { transactionHash } = await cdpClient.evm.requestFaucet({
+    address: params.address,
+    network: "base-sepolia",
+    token: params.tokenName,
+  });
+
+  const publicClient = createPublicClient({
+    chain: baseSepolia,
+    transport: http(config.BASE_SEPOLIA_NODE_URL),
+  });
+
+  await publicClient.waitForTransactionReceipt({
+    hash: transactionHash,
+  });
 }
 

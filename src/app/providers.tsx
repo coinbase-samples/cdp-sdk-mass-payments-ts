@@ -5,11 +5,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { baseSepolia } from 'viem/chains';
 import { coinbaseWallet } from 'wagmi/connectors';
 import { SessionProvider } from 'next-auth/react';
+import { WalletProvider } from './context/WalletContext';
 
 export const wagmiConfig = createConfig({
   chains: [baseSepolia],
   transports: {
-    [baseSepolia.id]: http('https://api.developer.coinbase.com/rpc/v1/base-sepolia/z1Au8i9SL0g36BCwmYtOYhzdP6fymcm7'),
+    [baseSepolia.id]: http(),
   },
   connectors: [coinbaseWallet()],
 });
@@ -22,7 +23,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <SessionProvider>
-          {children}
+          <WalletProvider>
+            {children}
+          </WalletProvider>
         </SessionProvider>
       </QueryClientProvider>
     </WagmiProvider>

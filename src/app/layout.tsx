@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import '@coinbase/onchainkit/styles.css'; 
+import '@coinbase/onchainkit/styles.css';
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CDP Mass Payouts",
-  description: "Mass payout system for CDP",
+  title: "CDP Mass Payments",
+  description: "Use CDP SDK to send mass payments on Base Sepolia",
+  icons: {
+    "icon": "/favicon.png",
+  },
 };
 
 export default function RootLayout({

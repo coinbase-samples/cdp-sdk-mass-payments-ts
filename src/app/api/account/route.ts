@@ -11,5 +11,6 @@ export async function GET() {
   }
 
   const account = await getOrCreateEvmAccount({ accountId: session.address })
+
   return NextResponse.json({ address: account.address })
 }
