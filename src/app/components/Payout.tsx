@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import AccountDropdown from './AccountDropdown'
 
 export const Payout = () => {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const { isConnected } = useAccount()
   const router = useRouter()
 
