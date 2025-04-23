@@ -21,21 +21,25 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   const [balance, setBalance] = useState<string>()
 
   const fetchEvmAddress = async () => {
-    const res = await fetch('/api/wallet')
-    if (res.ok) {
+    try {
+      const res = await fetch('/api/evm-account')
+      if (!res.ok) throw new Error('Failed to fetch evm account')
       const { address } = await res.json()
       setEvmAddress(address)
+    } catch (err) {
+      console.error('fetchEvmAddress error:', err)
     }
   }
 
   const refreshBalance = async () => {
     if (!evmAddress) return
     try {
-      const res = await fetch(`/api/wallet/balance?address=${evmAddress}`)
+      const res = await fetch(`/api/balance?address=${evmAddress}`)
+      if (!res.ok) throw new Error('Failed to fetch balance')
       const { balance } = await res.json()
       setBalance(balance)
     } catch (err) {
-      console.error('Failed to fetch balance:', err)
+      console.error('refreshBalance error:', err)
     }
   }
 
@@ -57,3 +61,4 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     </WalletContext.Provider>
   )
 }
+
