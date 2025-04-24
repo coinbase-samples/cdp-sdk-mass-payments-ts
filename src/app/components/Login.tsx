@@ -65,7 +65,7 @@ export const Login = () => {
             <button
               onClick={() => connect({ connector: coinbaseWallet() })}
               disabled={isConnecting}
-              className="connectBttn flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isConnecting ? (
                 <>
@@ -82,7 +82,7 @@ export const Login = () => {
             <button
               onClick={handleSignIn}
               disabled={isSigning}
-              className="connectBttn w-[200px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer w-[200px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSigning ? (
                 <>

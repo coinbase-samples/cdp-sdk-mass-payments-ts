@@ -105,7 +105,7 @@ export const PayoutForm = () => {
         <div className="flex gap-2 w-full sm:w-auto">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="connectBttn px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px]"
+            className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px]"
           >
             Upload CSV
           </button>
@@ -118,7 +118,7 @@ export const PayoutForm = () => {
           />
           <button
             onClick={addRow}
-            className="connectBttn px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px]"
+            className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px]"
           >
             Add Row
           </button>
@@ -150,7 +150,7 @@ export const PayoutForm = () => {
             />
             <button
               onClick={() => removeRow(index)}
-              className="px-3 py-1 bg-red-500 text-white rounded text-xs sm:text-sm whitespace-nowrap"
+              className="px-3 py-1.5 sm:py-2 bg-red-500 text-white rounded text-sm sm:text-base whitespace-nowrap"
             >
               Remove
             </button>
@@ -165,7 +165,7 @@ export const PayoutForm = () => {
       <div className="flex justify-start sm:justify-end">
         <button
           onClick={handleConfirm}
-          className="connectBttn mt-4 px-6 py-2 text-xs sm:text-sm"
+          className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer mt-4 px-6 py-2 text-xs sm:text-sm"
         >
           Confirm Transfer
         </button>
