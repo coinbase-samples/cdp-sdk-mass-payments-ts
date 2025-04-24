@@ -20,9 +20,7 @@ body {
 }
 
 .connectBttn {
-  font-size: 16px;
   font-weight: bold;
-  padding: 8px 16px;
   background-color: var(--coinbase-blue);
   color: white;
   border-radius: 30px;

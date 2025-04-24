@@ -1,4 +1,3 @@
-import { config } from "@/lib/config";
 import { getOrCreateEvmAccount } from "@/lib/cdp";
 import { NextRequest, NextResponse } from "next/server";
 import { publicClient, TOKEN_ADDRESSES, executeEthTransfer, executeErc20Transfer } from "@/lib/viem";

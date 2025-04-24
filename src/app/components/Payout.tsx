@@ -23,9 +23,9 @@ export const Payout = () => {
   }, [status, isConnected, router])
 
   return (
-    <div className="sm:w-full w-3/4 mx-auto px-16 py-6">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
       <PayoutHeader />
-      <div className="flex flex-row sm:flex-col gap-6 p-7 bg-white rounded-lg border border-gray-200 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)]">
+      <div className="flex flex-col xl:flex-row gap-4 sm:gap-6 p-4 sm:p-7 bg-white rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] min-w-[320px]">
         <WalletInfo />
         <PayoutForm />
       </div>

@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.0.1",
-    "@coinbase/onchainkit": "^0.38.7",
     "@tanstack/react-query": "^5.74.4",
     "next": "15.3.0",
     "next-auth": "^4.24.11",

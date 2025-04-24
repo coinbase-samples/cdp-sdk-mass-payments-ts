@@ -35,16 +35,16 @@ export default function AccountDropdown() {
     <div className="relative inline-block text-left" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-gray-100 px-4 py-2 rounded-xl text-sm font-medium shadow hover:bg-gray-200 transition"
+        className="bg-gray-100 px-4 py-1.5 rounded-xl text-xs sm:text-sm font-medium shadow hover:bg-gray-200 transition w-fit"
       >
         {displayName}
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-40 bg-white rounded-md shadow-lg z-50">
+        <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
           <button
             onClick={handleSignOut}
-            className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
+            className="block w-full text-left px-4 py-2 text-xs sm:text-sm text-red-500 hover:bg-gray-100"
           >
             Sign Out
           </button>

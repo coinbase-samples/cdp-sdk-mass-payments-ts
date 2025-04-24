@@ -3,8 +3,8 @@ import AccountDropdown from './AccountDropdown'
 
 export const PayoutHeader = () => {
   return (
-    <div className="flex justify-between items-center mb-6 pb-6 border-b">
-      <div className="w-48 md:w-96 h-16 relative">
+    <div className="flex flex-col md:flex-row justify-start md:justify-between items-start md:items-center gap-2 md:gap-4 mb-2 md:mb-6 pb-2 md:pb-6">
+      <div className="w-48 md:w-96 h-12 md:h-16 relative">
         <Image
           src="/paymaker.png"
           alt="Paymaker Logo"
@@ -12,7 +12,9 @@ export const PayoutHeader = () => {
           style={{ objectFit: 'contain' }}
         />
       </div>
-      <AccountDropdown />
+      <div className="w-full md:w-auto">
+        <AccountDropdown />
+      </div>
     </div>
   )
 } 

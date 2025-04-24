@@ -28,18 +28,17 @@ export const WalletInfo = () => {
   }
 
   return (
-    <div className="w-1/4 sm:w-full p-4 border-r">
+    <div className="w-full md:w-1/2 p-4">
       <h2 className="text-lg font-semibold mb-4">Wallet Information</h2>
       <div className="space-y-4">
         <div>
           <p className="text-gray-600">Address</p>
-          <p className="text-sm font-mono break-all">{evmAddress}</p>
+          <p className="text-sm font-mono break-all overflow-hidden text-ellipsis">{evmAddress}</p>
         </div>
-        <div>
-          <p className="text-gray-600">Balance</p>
+        <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <p className="text-xl font-semibold">
-              {balances[activeToken] ?? '—'} {tokenDisplayMap[activeToken]}
+              {balances[activeToken] ?? '—'}
             </p>
             <select
               value={activeToken}
@@ -47,7 +46,7 @@ export const WalletInfo = () => {
                 setActiveToken(e.target.value as TokenKey)
                 refreshBalance(e.target.value as TokenKey)
               }}
-              className="px-2 py-1 rounded border"
+              className="px-3 py-1 rounded border text-xs sm:text-sm"
             >
               {Object.entries(tokenDisplayMap).map(([key, display]) => (
                 <option key={key} value={key}>
@@ -59,7 +58,7 @@ export const WalletInfo = () => {
           <button
             onClick={handleFaucetRequest}
             disabled={isLoading}
-            className="connectBttn mt-2 px-3 py-1 text-sm flex items-center gap-2"
+            className="connectBttn px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 w-fit"
           >
             {isLoading ? (
               <>

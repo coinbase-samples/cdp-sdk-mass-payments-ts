@@ -99,13 +99,13 @@ export const PayoutForm = () => {
   }
 
   return (
-    <div className="w-3/4 sm:w-full p-4">
-      <div className="flex justify-between items-center mb-4">
+    <div className="w-full p-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
         <h2 className="text-lg font-semibold">Payout Recipients</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="connectBttn px-3 py-1 text-sm"
+            className="connectBttn px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px]"
           >
             Upload CSV
           </button>
@@ -118,7 +118,7 @@ export const PayoutForm = () => {
           />
           <button
             onClick={addRow}
-            className="connectBttn px-3 py-1 text-sm"
+            className="connectBttn px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px]"
           >
             Add Row
           </button>
@@ -133,24 +133,24 @@ export const PayoutForm = () => {
 
       <div className="space-y-2">
         {payoutRows.map((row, index) => (
-          <div key={index} className="flex gap-2 items-center">
+          <div key={index} className="flex gap-1 sm:gap-2 items-center">
             <input
               type="text"
               placeholder="Recipient ID"
               value={row.recipientId}
               onChange={(e) => updateRow(index, 'recipientId', e.target.value)}
-              className="flex-1 p-2 border rounded"
+              className="flex-1 p-1 sm:p-2 border rounded text-sm sm:text-base min-w-0"
             />
             <input
               type="number"
               placeholder="Amount"
               value={row.amount}
               onChange={(e) => updateRow(index, 'amount', e.target.value)}
-              className="w-32 p-2 border rounded"
+              className="w-16 sm:w-24 p-1 sm:p-2 border rounded text-sm sm:text-base"
             />
             <button
               onClick={() => removeRow(index)}
-              className="px-2 py-1 bg-red-500 text-white rounded"
+              className="px-3 py-1 bg-red-500 text-white rounded text-xs sm:text-sm whitespace-nowrap"
             >
               Remove
             </button>
@@ -162,12 +162,14 @@ export const PayoutForm = () => {
         {payoutRows.length} of {MAX_ROWS} rows used
       </div>
 
-      <button
-        onClick={handleConfirm}
-        className="mt-4 w-full px-4 py-2 bg-green-500 text-white rounded font-bold"
-      >
-        Confirm Transfer
-      </button>
+      <div className="flex justify-start sm:justify-end">
+        <button
+          onClick={handleConfirm}
+          className="connectBttn mt-4 px-6 py-2 text-xs sm:text-sm"
+        >
+          Confirm Transfer
+        </button>
+      </div>
     </div>
   )
 } 
