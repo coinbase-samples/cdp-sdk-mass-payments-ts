@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useWallet } from '@/app/context/WalletContext'
 
 type PayoutRow = {
   recipientId: string
@@ -8,6 +9,7 @@ type PayoutRow = {
 const MAX_ROWS = 100
 
 export const PayoutForm = () => {
+  const { activeToken } = useWallet()
   const [payoutRows, setPayoutRows] = useState<PayoutRow[]>([{ recipientId: '', amount: '' }])
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -77,7 +79,7 @@ export const PayoutForm = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          token: '0x0000000000000000000000000000000000000000', // Native token
+          token: activeToken, // Native token
           data: payoutRows.map(row => ({
             to: row.recipientId,
             amount: row.amount
@@ -88,6 +90,9 @@ export const PayoutForm = () => {
       if (!response.ok) {
         throw new Error('Transfer failed', { cause: await response.json() })
       }
+
+      const data = await response.json()
+      console.log(data);
     } catch (error) {
       console.error('Transfer error:', error)
     }

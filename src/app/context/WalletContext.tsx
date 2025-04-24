@@ -11,13 +11,6 @@ type WalletContextType = {
   refreshBalance: (token?: TokenKey) => void
 }
 
-const tokenDisplayMap: Record<TokenKey, string> = {
-  eth: 'ETH',
-  usdc: 'USDC',
-  eurc: 'EURC',
-  cbbtc: 'cbBTC',
-}
-
 type TokenKey = 'eth' | 'usdc' | 'eurc' | 'cbbtc'
 
 const WalletContext = createContext<WalletContextType>({
