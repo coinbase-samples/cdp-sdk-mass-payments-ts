@@ -58,7 +58,7 @@ export const WalletInfo = () => {
           <button
             onClick={handleFaucetRequest}
             disabled={isLoading}
-            className="connectBttn px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 w-fit"
+            className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 w-fit disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <>

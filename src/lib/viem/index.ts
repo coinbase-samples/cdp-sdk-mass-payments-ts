@@ -1,4 +1,4 @@
-import { createPublicClient, erc20Abi, formatUnits, http, parseEther } from "viem";
+import { createPublicClient, erc20Abi, formatUnits, http, parseEther, Address } from "viem";
 import { baseSepolia } from "viem/chains";
 import { config } from "@/lib/config";
 import { createWalletClient } from "viem";
@@ -21,26 +21,44 @@ export async function executeEthTransfer(
   account: EvmServerAccount,
   to: string,
   amount: string
-): Promise<void> {
-  const viemAccount = toAccount(account);
-  const walletClient = createWalletClient({
-    account: viemAccount,
-    transport: http(config.BASE_SEPOLIA_NODE_URL),
-    chain: baseSepolia,
-  });
+): Promise<{ success: boolean; error?: string; hash?: string }> {
+  try {
+    const viemAccount = toAccount(account);
+    const walletClient = createWalletClient({
+      account: viemAccount,
+      transport: http(config.BASE_SEPOLIA_NODE_URL),
+      chain: baseSepolia,
+    });
 
-  const recipientEvmAccount: EvmServerAccount = await getOrCreateEvmAccount({ accountId: to });
+    const amountWei = parseEther(amount);
 
-  const hash = await walletClient.sendTransaction({
-    to: recipientEvmAccount.address as `0x${string}`,
-    value: parseEther(amount),
-  });
+    // Get current gas parameters
+    const feeData = await publicClient.estimateFeesPerGas();
+    const maxFeePerGas = BigInt(Math.floor(Number(feeData.maxFeePerGas) * 1.2));
+    const maxPriorityFeePerGas = BigInt(Math.floor(Number(feeData.maxPriorityFeePerGas) * 1.2));
 
-  // Wait for transaction confirmation
-  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    const hash = await walletClient.sendTransaction({
+      to: to as Address,
+      value: amountWei,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      type: 'eip1559',
+    });
 
-  if (receipt.status !== 'success') {
-    throw new Error(`Transaction failed for recipient ${to}`);
+    // Wait for transaction confirmation
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+    if (receipt.status !== 'success') {
+      return { success: false, error: 'Transaction reverted', hash };
+    }
+
+    return { success: true, hash };
+  } catch (error) {
+    console.error('ETH transfer error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error during ETH transfer'
+    };
   }
 }
 
@@ -49,40 +67,57 @@ export async function executeErc20Transfer(
   tokenSymbol: string,
   to: string,
   amount: string
-): Promise<void> {
-  const viemAccount = toAccount(account);
-  const walletClient = createWalletClient({
-    account: viemAccount,
-    transport: http(config.BASE_SEPOLIA_NODE_URL),
-    chain: baseSepolia,
-  });
+): Promise<{ success: boolean; error?: string; hash?: string }> {
+  try {
+    const viemAccount = toAccount(account);
+    const walletClient = createWalletClient({
+      account: viemAccount,
+      transport: http(config.BASE_SEPOLIA_NODE_URL),
+      chain: baseSepolia,
+    });
 
-  const tokenAddress = TOKEN_ADDRESSES[tokenSymbol];
-  if (!tokenAddress) {
-    throw new Error(`Unknown token symbol: ${tokenSymbol}`);
-  }
+    const tokenAddress = TOKEN_ADDRESSES[tokenSymbol];
+    if (!tokenAddress) {
+      return { success: false, error: `Unknown token symbol: ${tokenSymbol}` };
+    }
 
-  const decimals = await publicClient.readContract({
-    abi: erc20Abi,
-    address: tokenAddress,
-    functionName: 'decimals',
-  });
+    const decimals = await publicClient.readContract({
+      abi: erc20Abi,
+      address: tokenAddress,
+      functionName: 'decimals',
+    });
 
-  const recipientEvmAccount: EvmServerAccount = await getOrCreateEvmAccount({ accountId: to });
-  const amountWei = BigInt(Math.floor(parseFloat(amount) * 10 ** decimals));
+    const amountWei = BigInt(Math.floor(parseFloat(amount) * 10 ** decimals));
 
-  const hash = await walletClient.writeContract({
-    address: tokenAddress,
-    abi: erc20Abi,
-    functionName: 'transfer',
-    args: [recipientEvmAccount.address, amountWei],
-  });
+    // Get current gas parameters
+    const feeData = await publicClient.estimateFeesPerGas();
+    const maxFeePerGas = BigInt(Math.floor(Number(feeData.maxFeePerGas) * 1.2));
+    const maxPriorityFeePerGas = BigInt(Math.floor(Number(feeData.maxPriorityFeePerGas) * 1.2));
 
-  // Wait for transaction confirmation
-  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    const hash = await walletClient.writeContract({
+      address: tokenAddress,
+      abi: erc20Abi,
+      functionName: 'transfer',
+      args: [to as Address, amountWei],
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      type: 'eip1559',
+    });
 
-  if (receipt.status !== 'success') {
-    throw new Error(`Transaction failed for recipient ${to}`);
+    // Wait for transaction confirmation
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+    if (receipt.status !== 'success') {
+      return { success: false, error: 'Transaction reverted', hash };
+    }
+
+    return { success: true, hash };
+  } catch (error) {
+    console.error('ERC20 transfer error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error during ERC20 transfer'
+    };
   }
 }
 

@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react'
 import { useWallet } from '@/app/context/WalletContext'
+import { TransferResultsModal } from './TransferResultsModal'
+import { TransferResult } from '@/lib/types/transfer'
 
 type PayoutRow = {
   recipientId: string
@@ -9,9 +11,12 @@ type PayoutRow = {
 const MAX_ROWS = 100
 
 export const PayoutForm = () => {
-  const { activeToken } = useWallet()
+  const { activeToken, refreshBalance } = useWallet()
   const [payoutRows, setPayoutRows] = useState<PayoutRow[]>([{ recipientId: '', amount: '' }])
   const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showResults, setShowResults] = useState(false)
+  const [transferResults, setTransferResults] = useState<TransferResult[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const addRow = () => {
@@ -72,6 +77,11 @@ export const PayoutForm = () => {
   }
 
   const handleConfirm = async () => {
+    if (isSubmitting) return; // Prevent double submission
+
+    setIsSubmitting(true);
+    setError(null);
+
     try {
       const response = await fetch('/api/account/transfer', {
         method: 'POST',
@@ -79,7 +89,7 @@ export const PayoutForm = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          token: activeToken, // Native token
+          token: activeToken,
           data: payoutRows.map(row => ({
             to: row.recipientId,
             amount: row.amount
@@ -87,14 +97,25 @@ export const PayoutForm = () => {
         }),
       })
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Transfer failed', { cause: await response.json() })
+        throw new Error(data.error || 'Transfer failed');
       }
 
-      const data = await response.json()
-      console.log(data);
+      setTransferResults(data.results);
+      setShowResults(true);
+      refreshBalance(activeToken); // Refresh balance after successful transfer
+
+      // Only clear form if all transfers succeeded
+      if (data.results.every((r: TransferResult) => r.success)) {
+        setPayoutRows([{ recipientId: '', amount: '' }]);
+      }
     } catch (error) {
-      console.error('Transfer error:', error)
+      console.error('Transfer error:', error);
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -105,7 +126,8 @@ export const PayoutForm = () => {
         <div className="flex gap-2 w-full sm:w-auto">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px]"
+            disabled={isSubmitting}
+            className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Upload CSV
           </button>
@@ -115,10 +137,12 @@ export const PayoutForm = () => {
             onChange={handleFileUpload}
             accept=".csv"
             className="hidden"
+            disabled={isSubmitting}
           />
           <button
             onClick={addRow}
-            className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px]"
+            disabled={isSubmitting}
+            className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Add Row
           </button>
@@ -139,18 +163,21 @@ export const PayoutForm = () => {
               placeholder="Recipient ID"
               value={row.recipientId}
               onChange={(e) => updateRow(index, 'recipientId', e.target.value)}
-              className="flex-1 p-1 sm:p-2 border rounded text-sm sm:text-base min-w-0"
+              className="flex-1 p-1 sm:p-2 border rounded text-sm sm:text-base min-w-0 disabled:opacity-50"
+              disabled={isSubmitting}
             />
             <input
               type="number"
               placeholder="Amount"
               value={row.amount}
               onChange={(e) => updateRow(index, 'amount', e.target.value)}
-              className="w-16 sm:w-24 p-1 sm:p-2 border rounded text-sm sm:text-base"
+              className="w-16 sm:w-24 p-1 sm:p-2 border rounded text-sm sm:text-base disabled:opacity-50"
+              disabled={isSubmitting}
             />
             <button
               onClick={() => removeRow(index)}
-              className="px-3 py-1.5 sm:py-2 bg-red-500 text-white rounded text-sm sm:text-base whitespace-nowrap"
+              disabled={isSubmitting}
+              className="px-3 py-1.5 sm:py-2 bg-red-500 text-white rounded text-sm sm:text-base whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Remove
             </button>
@@ -165,11 +192,28 @@ export const PayoutForm = () => {
       <div className="flex justify-start sm:justify-end">
         <button
           onClick={handleConfirm}
-          className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer mt-4 px-6 py-2 text-xs sm:text-sm"
+          disabled={isSubmitting}
+          className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer mt-4 px-6 py-2 text-xs sm:text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Confirm Transfer
+          {isSubmitting ? (
+            <>
+              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Processing...
+            </>
+          ) : (
+            'Confirm Transfer'
+          )}
         </button>
       </div>
+
+      <TransferResultsModal
+        isOpen={showResults}
+        onClose={() => setShowResults(false)}
+        results={transferResults}
+      />
     </div>
   )
 } 
