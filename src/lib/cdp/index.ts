@@ -3,8 +3,7 @@ import { config } from '../config';
 import { getWalletAddress, createWallet } from '../db';
 import { createHash } from 'crypto';
 import { GetOrCreateEvmAccountParams, RequestFaucetParams } from "../types/cdp";
-import { createPublicClient, http } from "viem";
-import { baseSepolia } from "viem/chains";
+import { publicClient } from "@/lib/viem";
 
 const cdpClient: CdpClient = new CdpClient({
   apiKeyId: config.CDP_API_KEY_ID,
@@ -13,7 +12,6 @@ const cdpClient: CdpClient = new CdpClient({
 });
 
 export async function getOrCreateEvmAccount(params: GetOrCreateEvmAccountParams): Promise<EvmServerAccount> {
-  // Check if env variables are properly set
   if (!config.DATABASE_URL) {
     throw new Error("Database configuration is not properly set");
   }
@@ -44,11 +42,6 @@ export async function requestFaucetFunds(params: RequestFaucetParams) {
     address: params.address,
     network: "base-sepolia",
     token: params.tokenName,
-  });
-
-  const publicClient = createPublicClient({
-    chain: baseSepolia,
-    transport: http(config.BASE_SEPOLIA_NODE_URL),
   });
 
   await publicClient.waitForTransactionReceipt({
