@@ -5,7 +5,13 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { accountId: string } }
 ) {
+  const userAddress = req.headers.get('x-user-address')
+  if (!userAddress) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const { accountId } = await params;
+
   const token = req.nextUrl.searchParams.get('token');
 
   if (!token) {
@@ -17,16 +23,15 @@ export async function GET(
   }
 
   try {
-    await requestFaucetFunds(
-      {
-        address: accountId as `0x${string}`,
-        tokenName: token
-      }
-    );
-    return NextResponse.json('Ok', { status: 200 });
+    await requestFaucetFunds({
+      address: accountId as `0x${string}`,
+      tokenName: token
+    });
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error fetching balance:', error);
-    return NextResponse.json({ error: 'Failed to fetch balance' }, { status: 500 });
+    console.error("Error requesting faucet:", error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
 

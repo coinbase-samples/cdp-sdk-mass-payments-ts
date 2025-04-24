@@ -1,21 +1,16 @@
 import { config } from "@/lib/config";
 import { getOrCreateEvmAccount } from "@/lib/cdp";
-import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createWalletClient, createPublicClient, http, parseEther, zeroAddress } from "viem";
 import { toAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
-import { authOptions } from "../../auth/[...nextauth]/route";
 import { EvmServerAccount } from "@coinbase/cdp-sdk";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const session = await getServerSession(authOptions)
-
-  if (!session?.address) {
+  const userAddress = request.headers.get('x-user-address')
+  if (!userAddress) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-
-  const address = session.address!;
 
   const { token, data } = await request.json();
 
@@ -23,10 +18,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return new NextResponse("Invalid request", { status: 400 });
   }
 
-  return NextResponse.json({ message: 'Request received' }, { status: 200 });
-
-  /*try {
-    const evmAccount = await getOrCreateEvmAccount({ accountId: address });
+  try {
+    const evmAccount = await getOrCreateEvmAccount({ accountId: userAddress });
     const viemAccount = toAccount(evmAccount);
     const walletClient = createWalletClient({
       account: viemAccount,
@@ -82,15 +75,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
-  }*/
+  }
 }
 
-const executeTransfer = async (
+async function executeTransfer(
   walletClient: any,
   publicClient: any,
   to: string,
   amount: string
-): Promise<void> => {
+): Promise<void> {
   const recipientEvmAccount: EvmServerAccount = await getOrCreateEvmAccount({ accountId: to });
 
   const hash = await walletClient.sendTransaction({
