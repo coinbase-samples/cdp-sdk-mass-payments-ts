@@ -2,112 +2,161 @@ import { getOrCreateEvmAccount } from "@/lib/cdp";
 import { NextRequest, NextResponse } from "next/server";
 import { publicClient, TOKEN_ADDRESSES, executeEthTransfer, executeErc20Transfer } from "@/lib/viem";
 import { erc20Abi } from "viem";
+import { Address } from "viem";
+
+interface TransferRequest {
+  token: string;
+  data: Array<{
+    to: string;
+    amount: string;
+  }>;
+}
+
+interface TransferResult {
+  success: boolean;
+  to: string;
+  error?: string;
+}
+
+class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+class InsufficientBalanceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InsufficientBalanceError';
+  }
+}
+
+async function validateUserAddress(request: NextRequest): Promise<string> {
+  const userAddress = request.headers.get('x-user-address');
+  if (!userAddress) {
+    throw new ValidationError('Unauthorized');
+  }
+  return userAddress;
+}
+
+async function validateRequest(request: NextRequest): Promise<TransferRequest> {
+  const { token, data } = await request.json();
+  
+  if (!token || !data) {
+    throw new ValidationError('Invalid request: token and data are required');
+  }
+
+  if (token !== 'eth' && !TOKEN_ADDRESSES[token]) {
+    throw new ValidationError('Unsupported token');
+  }
+
+  return { token, data };
+}
+
+async function calculateTotalAmount(data: TransferRequest['data']): Promise<number> {
+  return data
+    .map(row => parseFloat(row.amount))
+    .reduce((sum, amount) => sum + amount, 0);
+}
+
+async function executeTransfers(
+  evmAccount: any,
+  token: string,
+  data: TransferRequest['data']
+): Promise<TransferResult[]> {
+  const transferPromises = data.map(async (row) => {
+    try {
+      if (token === 'eth') {
+        await executeEthTransfer(evmAccount, row.to as Address, row.amount);
+      } else {
+        await executeErc20Transfer(evmAccount, token, row.to as Address, row.amount);
+      }
+      return { success: true, to: row.to };
+    } catch (error) {
+      return {
+        success: false,
+        to: row.to,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  });
+
+  return Promise.all(transferPromises);
+}
+
+async function checkEthBalance(address: Address, requiredAmount: bigint): Promise<void> {
+  const balance = await publicClient.getBalance({ address });
+  if (balance < requiredAmount) {
+    throw new InsufficientBalanceError('Insufficient ETH balance');
+  }
+}
+
+async function checkErc20Balance(
+  tokenAddress: Address,
+  ownerAddress: Address,
+  requiredAmount: bigint
+): Promise<void> {
+  const balance = await publicClient.readContract({
+    abi: erc20Abi,
+    address: tokenAddress,
+    functionName: 'balanceOf',
+    args: [ownerAddress],
+  });
+
+  if (balance < requiredAmount) {
+    throw new InsufficientBalanceError('Insufficient token balance');
+  }
+}
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const userAddress = request.headers.get('x-user-address')
-  if (!userAddress) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const { token, data } = await request.json();
-
-  if (!token || !data) {
-    return new NextResponse("Invalid request", { status: 400 });
-  }
-
-  // Validate token
-  if (token !== 'eth' && !TOKEN_ADDRESSES[token]) {
-    return new NextResponse("Unsupported token", { status: 400 });
-  }
-
   try {
+    const userAddress = await validateUserAddress(request);
+    const { token, data } = await validateRequest(request);
     const evmAccount = await getOrCreateEvmAccount({ accountId: userAddress });
+    const totalAmount = await calculateTotalAmount(data);
 
-    // Convert all amounts to numbers and sum them up
-    const totalAmount = data
-      .map((row: { amount: string }) => parseFloat(row.amount))
-      .reduce((sum: number, amount: number) => sum + amount, 0);
-
-    // Native (ETH) transfer
     if (token === 'eth') {
-      const balance = await publicClient.getBalance({ address: evmAccount.address });
       const totalAmountWei = BigInt(Math.floor(totalAmount * 10 ** 18));
-
-      if (balance < totalAmountWei) {
-        return new NextResponse("Insufficient balance", { status: 400 });
-      }
-
-      // Execute all transfers concurrently and wait for all to complete
-      const transferPromises = data.map(async (row: { to: string; amount: string }) => {
-        try {
-          await executeEthTransfer(evmAccount, row.to, row.amount);
-          return { success: true, to: row.to };
-        } catch (error) {
-          return { success: false, to: row.to, error: error instanceof Error ? error.message : 'Unknown error' };
-        }
-      });
-
-      const results = await Promise.all(transferPromises);
-
-      // Check if any transfers failed
-      const failedTransfers = results.filter(result => !result.success);
-      if (failedTransfers.length > 0) {
-        return NextResponse.json({
-          error: 'Some transfers failed',
-          failedTransfers
-        }, { status: 500 });
-      }
-
-      return NextResponse.json({ success: true, results });
+      await checkEthBalance(evmAccount.address as Address, totalAmountWei);
     } else {
-      // ERC20 token transfer
       const tokenAddress = TOKEN_ADDRESSES[token];
       const decimals = await publicClient.readContract({
         abi: erc20Abi,
         address: tokenAddress,
         functionName: 'decimals',
       });
-
-      // Get token balance
-      const balance = await publicClient.readContract({
-        abi: erc20Abi,
-        address: tokenAddress,
-        functionName: 'balanceOf',
-        args: [evmAccount.address],
-      });
-
       const totalAmountWei = BigInt(Math.floor(totalAmount * 10 ** decimals));
-      if (balance < totalAmountWei) {
-        return new NextResponse("Insufficient token balance", { status: 400 });
-      }
-
-      // Execute all transfers concurrently and wait for all to complete
-      const transferPromises = data.map(async (row: { to: string; amount: string }) => {
-        try {
-          await executeErc20Transfer(evmAccount, token, row.to, row.amount);
-          return { success: true, to: row.to };
-        } catch (error) {
-          return { success: false, to: row.to, error: error instanceof Error ? error.message : 'Unknown error' };
-        }
-      });
-
-      const results = await Promise.all(transferPromises);
-
-      // Check if any transfers failed
-      const failedTransfers = results.filter(result => !result.success);
-      if (failedTransfers.length > 0) {
-        return NextResponse.json({
-          error: 'Some transfers failed',
-          failedTransfers
-        }, { status: 500 });
-      }
-
-      return NextResponse.json({ success: true, results });
+      await checkErc20Balance(tokenAddress, evmAccount.address as Address, totalAmountWei);
     }
+
+    const results = await executeTransfers(evmAccount, token, data);
+    const failedTransfers = results.filter(result => !result.success);
+
+    if (failedTransfers.length > 0) {
+      return NextResponse.json({
+        error: 'Some transfers failed',
+        failedTransfers
+      }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, results });
   } catch (error) {
+    let status = 500;
+    let errorMessage = 'Internal server error';
+
+    if (error instanceof ValidationError) {
+      status = 400;
+      errorMessage = error.message;
+    } else if (error instanceof InsufficientBalanceError) {
+      status = 400;
+      errorMessage = error.message;
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
     return NextResponse.json({
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+      error: errorMessage
+    }, { status });
   }
 }
