@@ -65,4 +65,3 @@ export async function requestFaucetFunds(params: RequestFaucetParams) {
     hash: transactionHash,
   });
 }
-

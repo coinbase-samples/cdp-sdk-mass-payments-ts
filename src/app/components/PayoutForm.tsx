@@ -27,7 +27,7 @@ type PayoutRow = {
 const MAX_ROWS = 100
 
 export const PayoutForm = () => {
-  const { activeToken, refreshBalance } = useWallet()
+  const { activeToken, refreshBalance, evmAddress } = useWallet()
   const [payoutRows, setPayoutRows] = useState<PayoutRow[]>([{ recipientId: '', amount: '' }])
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -99,7 +99,11 @@ export const PayoutForm = () => {
     setError(null);
 
     try {
-      const response = await fetch('/api/account/transfer', {
+      if (!evmAddress) {
+        throw new Error('No wallet connected');
+      }
+
+      const response = await fetch(`/api/account/${evmAddress}/transfer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

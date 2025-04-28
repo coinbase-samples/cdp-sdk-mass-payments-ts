@@ -20,6 +20,7 @@ import { config } from "@/lib/config";
 import { createWalletClient } from "viem";
 import { toAccount } from "viem/accounts";
 import { EvmServerAccount } from "@coinbase/cdp-sdk";
+import GasliteDrop from "@/contracts/GasliteDrop.json";
 
 export const publicClient = createPublicClient({
   chain: baseSepolia,
@@ -32,97 +33,54 @@ export const TOKEN_ADDRESSES: Record<string, `0x${string}`> = {
   usdc: '0x036cbd53842c5426634e7929541ec2318f3dcf7e',
 };
 
-export async function executeEthTransfer(
+export async function executeBatchTransfer(
   account: EvmServerAccount,
-  to: string,
-  amount: string
-): Promise<{ success: boolean; error?: string; hash?: string }> {
-  try {
-    const walletClient = getWalletClient(account);
+  token: string,
+  addresses: Address[],
+  amounts: bigint[]
+): Promise<{ hash: string }> {
+  const walletClient = getWalletClient(account);
 
-    const amountWei = parseEther(amount);
+  // Get current gas parameters
+  const feeData = await publicClient.estimateFeesPerGas();
+  const maxFeePerGas = BigInt(Math.floor(Number(feeData.maxFeePerGas) * 1.2));
+  const maxPriorityFeePerGas = BigInt(Math.floor(Number(feeData.maxPriorityFeePerGas) * 1.2));
 
-    // Get current gas parameters
-    const feeData = await publicClient.estimateFeesPerGas();
-    const maxFeePerGas = BigInt(Math.floor(Number(feeData.maxFeePerGas) * 1.2));
-    const maxPriorityFeePerGas = BigInt(Math.floor(Number(feeData.maxPriorityFeePerGas) * 1.2));
+  const totalAmount = amounts.reduce((sum, amount) => sum + amount, BigInt(0));
 
-    const hash = await walletClient.sendTransaction({
-      to: to as Address,
-      value: amountWei,
+  if (token === 'eth') {
+    const hash = await walletClient.writeContract({
+      address: config.GASLITE_DROP_ADDRESS as Address,
+      abi: GasliteDrop,
+      functionName: 'airdropETH',
+      args: [addresses, amounts],
       maxFeePerGas,
       maxPriorityFeePerGas,
       type: 'eip1559',
     });
 
     // Wait for transaction confirmation
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-
-    if (receipt.status !== 'success') {
-      return { success: false, error: 'Transaction reverted', hash };
-    }
-
-    return { success: true, hash };
-  } catch (error) {
-    console.error('ETH transfer error:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error during ETH transfer'
-    };
-  }
-}
-
-export async function executeErc20Transfer(
-  account: EvmServerAccount,
-  tokenSymbol: string,
-  to: string,
-  amount: string
-): Promise<{ success: boolean; error?: string; hash?: string }> {
-  try {
-    const walletClient = getWalletClient(account);
-
-    const tokenAddress = TOKEN_ADDRESSES[tokenSymbol];
+    await publicClient.waitForTransactionReceipt({ hash });
+    return { hash };
+  } else {
+    const tokenAddress = TOKEN_ADDRESSES[token];
     if (!tokenAddress) {
-      return { success: false, error: `Unknown token symbol: ${tokenSymbol}` };
+      throw new Error(`Unknown token symbol: ${token}`);
     }
-
-    const decimals = await publicClient.readContract({
-      abi: erc20Abi,
-      address: tokenAddress,
-      functionName: 'decimals',
-    });
-
-    const amountWei = BigInt(Math.floor(parseFloat(amount) * 10 ** decimals));
-
-    // Get current gas parameters
-    const feeData = await publicClient.estimateFeesPerGas();
-    const maxFeePerGas = BigInt(Math.floor(Number(feeData.maxFeePerGas) * 1.2));
-    const maxPriorityFeePerGas = BigInt(Math.floor(Number(feeData.maxPriorityFeePerGas) * 1.2));
 
     const hash = await walletClient.writeContract({
-      address: tokenAddress,
-      abi: erc20Abi,
-      functionName: 'transfer',
-      args: [to as Address, amountWei],
+      address: config.GASLITE_DROP_ADDRESS as Address,
+      abi: GasliteDrop,
+      functionName: 'airdropERC20',
+      args: [tokenAddress, addresses, amounts, totalAmount],
       maxFeePerGas,
       maxPriorityFeePerGas,
       type: 'eip1559',
     });
 
     // Wait for transaction confirmation
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-
-    if (receipt.status !== 'success') {
-      return { success: false, error: 'Transaction reverted', hash };
-    }
-
-    return { success: true, hash };
-  } catch (error) {
-    console.error('ERC20 transfer error:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error during ERC20 transfer'
-    };
+    await publicClient.waitForTransactionReceipt({ hash });
+    return { hash };
   }
 }
 

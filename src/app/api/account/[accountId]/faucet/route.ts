@@ -21,13 +21,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { accountId: string } }
 ) {
-  const userAddress = req.headers.get('x-user-address')
-  if (!userAddress) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
   const { accountId } = await params;
-
   const token = req.nextUrl.searchParams.get('token');
 
   if (!token) {

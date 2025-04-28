@@ -24,9 +24,16 @@ export type TransferRequest = {
 
 export type TransferResult = {
   success: boolean;
-  recipientId: string;
-  recipientAddress: string;
-  amount: string;
-  error?: string;
   hash?: string;
+  error?: string;
+  recipients: Array<{
+    recipientId: string;
+    recipientAddress: string;
+    amount: string;
+  }>;
+}
+
+export type TransferRecipient = {
+  address: string;
+  amount: string;
 }

@@ -31,6 +31,9 @@ const requiredEnvVars = [
 
   // RPC Endpoint
   'BASE_SEPOLIA_NODE_URL',
+
+  // Contract Addresses
+  'GASLITE_DROP_ADDRESS',
 ] as const;
 
 type EnvVar = typeof requiredEnvVars[number];

@@ -20,7 +20,7 @@ import { TransferResult } from '@/lib/types/transfer';
 interface TransferResultsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  results: TransferResult[];
+  results: TransferResult;
 }
 
 export const TransferResultsModal = ({ isOpen, onClose, results }: TransferResultsModalProps) => {
@@ -38,9 +38,6 @@ export const TransferResultsModal = ({ isOpen, onClose, results }: TransferResul
 
   if (!isOpen) return null;
 
-  const successfulTransfers = results.filter(r => r.success);
-  const failedTransfers = results.filter(r => !r.success);
-
   return (
     <div className="fixed inset-0 flex items-start justify-center z-50 pt-16">
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto shadow-2xl">
@@ -57,26 +54,26 @@ export const TransferResultsModal = ({ isOpen, onClose, results }: TransferResul
         </div>
 
         <div className="space-y-4">
-          {successfulTransfers.length > 0 && (
+          {results.success ? (
             <div>
-              <h3 className="text-green-600 font-medium mb-2">Successful Transfers ({successfulTransfers.length})</h3>
+              <h3 className="text-green-600 font-medium mb-2">Successful Transfer</h3>
               <div className="space-y-2">
-                {successfulTransfers.map((result, index) => (
+                {results.recipients.map((recipient, index) => (
                   <div key={index} className="mb-2 p-2 bg-green-100 text-green-700 rounded">
                     <div className="font-semibold">Success</div>
-                    <div>Recipient ID: {result.recipientId}</div>
-                    <div>Recipient Address: {result.recipientAddress}</div>
-                    <div>Amount: {result.amount}</div>
-                    {result.hash && (
+                    <div>Recipient ID: {recipient.recipientId}</div>
+                    <div>Recipient Address: {recipient.recipientAddress}</div>
+                    <div>Amount: {recipient.amount}</div>
+                    {results.hash && (
                       <div>
                         Transaction:{" "}
                         <a
-                          href={`https://sepolia.basescan.org/tx/${result.hash}`}
+                          href={`https://sepolia.basescan.org/tx/${results.hash}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:underline"
                         >
-                          {result.hash.slice(0, 6)}...{result.hash.slice(-4)}
+                          {results.hash.slice(0, 6)}...{results.hash.slice(-4)}
                         </a>
                       </div>
                     )}
@@ -84,32 +81,17 @@ export const TransferResultsModal = ({ isOpen, onClose, results }: TransferResul
                 ))}
               </div>
             </div>
-          )}
-
-          {failedTransfers.length > 0 && (
+          ) : (
             <div>
-              <h3 className="text-red-600 font-medium mb-2">Failed Transfers ({failedTransfers.length})</h3>
+              <h3 className="text-red-600 font-medium mb-2">Failed Transfer</h3>
               <div className="space-y-2">
-                {failedTransfers.map((result, index) => (
+                {results.recipients.map((recipient, index) => (
                   <div key={index} className="mb-2 p-2 bg-red-100 text-red-700 rounded">
                     <div className="font-semibold">Failed</div>
-                    <div>Recipient ID: {result.recipientId}</div>
-                    {result.recipientAddress && <div>Recipient Address: {result.recipientAddress}</div>}
-                    <div>Amount: {result.amount}</div>
-                    {result.error && <div>Error: {result.error}</div>}
-                    {result.hash && (
-                      <div>
-                        Transaction:{" "}
-                        <a
-                          href={`https://sepolia.etherscan.io/tx/${result.hash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          {result.hash.slice(0, 6)}...{result.hash.slice(-4)}
-                        </a>
-                      </div>
-                    )}
+                    <div>Recipient ID: {recipient.recipientId}</div>
+                    {recipient.recipientAddress && <div>Recipient Address: {recipient.recipientAddress}</div>}
+                    <div>Amount: {recipient.amount}</div>
+                    {results.error && <div>Error: {results.error}</div>}
                   </div>
                 ))}
               </div>

@@ -19,11 +19,7 @@ import { getOrCreateEvmAccount } from "@/lib/cdp";
 
 export async function GET(req: Request) {
   try {
-    const userAddress = req.headers.get('x-user-address')
-    if (!userAddress) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+    const userAddress = req.headers.get('x-user-address') as string
     const account = await getOrCreateEvmAccount({ accountId: userAddress })
 
     return NextResponse.json({ address: account.address })

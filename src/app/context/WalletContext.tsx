@@ -21,6 +21,7 @@ import { useSession } from 'next-auth/react'
 
 type WalletContextType = {
   evmAddress?: string
+  accountId?: string
   balances: Partial<Record<TokenKey, string>>
   activeToken: TokenKey
   setActiveToken: (token: TokenKey) => void
@@ -41,14 +42,16 @@ export const useWallet = () => useContext(WalletContext)
 export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   const { data: session, status } = useSession()
   const [evmAddress, setEvmAddress] = useState<string>()
+  const [accountId, setAccountId] = useState<string>()
   const [balances, setBalances] = useState<Partial<Record<TokenKey, string>>>({})
   const [activeToken, setActiveToken] = useState<TokenKey>('eth')
 
   const fetchEvmAddress = async () => {
     const res = await fetch('/api/account')
     if (res.ok) {
-      const { address } = await res.json()
+      const { address, accountId } = await res.json()
       setEvmAddress(address)
+      setAccountId(accountId)
     }
   }
 
@@ -79,6 +82,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     <WalletContext.Provider
       value={{
         evmAddress,
+        accountId,
         balances,
         activeToken,
         setActiveToken,

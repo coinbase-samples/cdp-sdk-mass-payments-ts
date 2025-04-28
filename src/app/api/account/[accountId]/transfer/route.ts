@@ -16,7 +16,7 @@
 
 import { getOrCreateEvmAccount } from "@/lib/cdp";
 import { NextRequest, NextResponse } from "next/server";
-import { publicClient, TOKEN_ADDRESSES, executeEthTransfer, executeErc20Transfer } from "@/lib/viem";
+import { publicClient, TOKEN_ADDRESSES, executeBatchTransfer } from "@/lib/viem";
 import { erc20Abi, Address } from "viem";
 import { TransferRequest, TransferResult } from "@/lib/types/transfer";
 
@@ -32,14 +32,6 @@ class InsufficientBalanceError extends Error {
     super(message);
     this.name = 'InsufficientBalanceError';
   }
-}
-
-async function validateUserAddress(request: NextRequest): Promise<string> {
-  const userAddress = request.headers.get('x-user-address');
-  if (!userAddress) {
-    throw new ValidationError('Unauthorized');
-  }
-  return userAddress;
 }
 
 async function validateRequest(request: NextRequest): Promise<TransferRequest> {
@@ -66,54 +58,68 @@ async function executeTransfers(
   evmAccount: any,
   token: string,
   data: TransferRequest['data']
-): Promise<TransferResult[]> {
-  const results: TransferResult[] = [];
+): Promise<TransferResult> {
+  try {
+    // Get or create EVM accounts for all recipients
+    const recipients = await Promise.all(
+      data.map(async (row) => {
+        const recipientEvmAccount = await getOrCreateEvmAccount({ accountId: row.to });
+        return {
+          address: recipientEvmAccount.address,
+          amount: row.amount,
+          recipientId: row.to
+        };
+      })
+    );
 
-  for (let i = 0; i < data.length; i++) {
-    const row = data[i];
-    try {
-      // Add a delay between transactions to prevent nonce issues
-      if (i > 0) {
-        await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
-      }
+    // Prepare arrays for batch transfer
+    const addresses = recipients.map(r => r.address as Address);
+    const amounts = recipients.map(r => parseFloat(r.amount));
 
-      // Get or create EVM account for the recipient
-      const recipientEvmAccount = await getOrCreateEvmAccount({ accountId: row.to });
-      console.log(`Got EVM account for recipient ${row.to}:`, recipientEvmAccount.address);
+    // Convert amounts to wei
+    const amountsWei = token === 'eth'
+      ? amounts.map(amount => BigInt(Math.floor(amount * 10 ** 18)))
+      : await (async () => {
+        const tokenAddress = TOKEN_ADDRESSES[token];
+        const decimals = await publicClient.readContract({
+          abi: erc20Abi,
+          address: tokenAddress,
+          functionName: 'decimals',
+        });
+        return amounts.map(amount => BigInt(Math.floor(amount * 10 ** decimals)));
+      })();
 
-      let transferResult;
-      if (token === 'eth') {
-        transferResult = await executeEthTransfer(evmAccount, recipientEvmAccount.address as Address, row.amount);
-      } else {
-        transferResult = await executeErc20Transfer(evmAccount, token, recipientEvmAccount.address as Address, row.amount);
-      }
+    // Execute batch transfer - this will either succeed for all or fail for all
+    const { hash } = await executeBatchTransfer(
+      evmAccount,
+      token,
+      addresses,
+      amountsWei
+    );
 
-      results.push({
-        success: transferResult.success,
-        recipientId: row.to,
-        recipientAddress: recipientEvmAccount.address,
-        amount: row.amount,
-        error: transferResult.error,
-        hash: transferResult.hash
-      });
-
-      // If the transfer failed, log it but continue with other transfers
-      if (!transferResult.success) {
-        console.error(`Transfer failed for ${row.to}:`, transferResult.error);
-      }
-    } catch (error) {
-      console.error(`Unexpected error for ${row.to}:`, error);
-      results.push({
-        success: false,
+    // Return a single success result since all transfers succeeded
+    return {
+      success: true,
+      hash,
+      recipients: recipients.map(recipient => ({
+        recipientId: recipient.recipientId,
+        recipientAddress: recipient.address,
+        amount: recipient.amount
+      }))
+    };
+  } catch (error) {
+    console.error('Error executing batch transfer:', error);
+    // Return a single error result since all transfers failed
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      recipients: data.map(row => ({
         recipientId: row.to,
         recipientAddress: '',
-        amount: row.amount,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
+        amount: row.amount
+      }))
+    };
   }
-
-  return results;
 }
 
 async function checkEthBalance(address: Address, requiredAmount: bigint): Promise<void> {
@@ -140,16 +146,19 @@ async function checkErc20Balance(
   }
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { accountId: string } }
+): Promise<NextResponse> {
   try {
     console.log('Starting transfer request processing');
-    const userAddress = await validateUserAddress(request);
-    console.log('Validated user address:', userAddress);
+    const { accountId } = params;
+    console.log('Processing transfer for account:', accountId);
 
     const { token, data } = await validateRequest(request);
     console.log('Validated request:', { token, data });
 
-    const evmAccount = await getOrCreateEvmAccount({ accountId: userAddress });
+    const evmAccount = await getOrCreateEvmAccount({ accountId });
     console.log('Got EVM account:', evmAccount.address);
 
     const totalAmount = await calculateTotalAmount(data);
@@ -173,19 +182,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     console.log('Starting transfers execution');
-    const results = await executeTransfers(evmAccount, token, data);
-    const failedTransfers = results.filter(result => !result.success);
+    const result = await executeTransfers(evmAccount, token, data);
 
-    if (failedTransfers.length > 0) {
-      console.error('Some transfers failed:', failedTransfers);
+    if (!result.success) {
+      console.error('Transfer failed:', result.error);
       return NextResponse.json({
-        error: 'Some transfers failed',
-        results
+        error: result.error,
+        result
       }, { status: 500 });
     }
 
-    console.log('All transfers completed successfully');
-    return NextResponse.json({ success: true, results });
+    console.log('Transfer completed successfully');
+    return NextResponse.json({ success: true, result });
   } catch (error) {
     console.error('Transfer request failed:', error);
     let status = 500;
@@ -205,4 +213,4 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       error: errorMessage
     }, { status });
   }
-}
+} 
