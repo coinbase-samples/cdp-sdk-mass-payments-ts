@@ -43,7 +43,7 @@ export async function getOrCreateEvmAccount(params: GetOrCreateEvmAccountParams)
       return await cdpClient.evm.getAccount({ address: existingWallet.address });
     }
 
-    const evmAccount: EvmServerAccount = await cdpClient.evm.createAccount();
+    const evmAccount = await cdpClient.evm.createAccount();
 
     await createWallet(id, evmAccount.address);
 
