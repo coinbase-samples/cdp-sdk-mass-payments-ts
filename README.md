@@ -8,9 +8,16 @@
 A full-stack Next.js application for managing balances and paying out to other users using the [Coinbase Developer Platform SDK Wallet API](https://docs.cdp.coinbase.com/wallet-api-v2/docs/welcome).
 
 ## License
+
 The *CDP Mass Payments App* is free and open source and released under the [Apache License, Version 2.0](LICENSE).
 
 The application and code are only available for demonstration purposes.
+
+## Acknowledgments
+
+This project leverages the [Gaslite Drop contract](https://github.com/PopPunkLLC/gaslite-core/blob/main/src/GasliteDrop.sol) from [Pop Punk LLC Gaslite](https://www.gaslite.org/) for mass transfers.
+
+Special thanks to [HeimLabs](https://www.heimlabs.com/) for foundational work on the original Paymaker [frontend](https://github.com/HeimLabs/coinbase-sdk-payout-frontend) and [backend](https://github.com/HeimLabs/coinbase-sdk-payout-backend) that informed this sample app.
 
 ## Prerequisites
 
@@ -36,10 +43,10 @@ bun install
 
 3. Set up your environment variables - You will need to do the following
 
-* Copy .env.example to .env.local
-* Get an API Key ID and Secret from [Coinbase Developer Platform portal](https://portal.cdp.coinbase.com)
-* Create a [Neon DB instance on Vercel](https://vercel.com/marketplace/neon) (for the postgres)
-* Fill out all environment variables as expected
+- Copy .env.example to .env.local
+- Get an API Key ID and Secret from [Coinbase Developer Platform portal](https://portal.cdp.coinbase.com)
+- Create a [Neon DB instance on Vercel](https://vercel.com/marketplace/neon) (for the postgres)
+- Fill out all environment variables as expected
 
 4. Start the development server:
 
@@ -48,9 +55,3 @@ bun dev
 ```
 
 The application will be available at [http://localhost:3000](http://localhost:3000).
-
-## Features
-
-- 🔐 Example Authentication using [NextAuth.js](https://next-auth.js.org/) and [SignInWithEthereum](https://docs.login.xyz/)
-- 💰 Creating CDP Server Wallets for logged in users
-- 💸 Transfer assets to recipients - creating server wallets if the user doesn't already exist
