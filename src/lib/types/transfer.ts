@@ -34,6 +34,6 @@ export type TransferResult = {
 }
 
 export type TransferRecipient = {
-  address: string;
+  recipientId: string;
   amount: string;
 }

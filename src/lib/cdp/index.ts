@@ -21,6 +21,7 @@ import { createHash } from 'crypto';
 import { GetOrCreateEvmAccountParams, RequestFaucetParams } from "@/lib/types/cdp";
 import { publicClient } from "@/lib/viem";
 import { baseSepolia } from "viem/chains";
+import { Address } from "viem";
 
 const cdpClient: CdpClient = new CdpClient({
   apiKeyId: config.CDP_API_KEY_ID,
@@ -28,7 +29,7 @@ const cdpClient: CdpClient = new CdpClient({
   walletSecret: config.CDP_WALLET_SECRET,
 });
 
-export async function getOrCreateEvmAccount(params: GetOrCreateEvmAccountParams): Promise<EvmServerAccount> {
+export async function getOrCreateEvmAccountFromId(params: GetOrCreateEvmAccountParams): Promise<EvmServerAccount> {
   if (!config.DATABASE_URL) {
     throw new Error("Database configuration is not properly set");
   }
@@ -52,6 +53,10 @@ export async function getOrCreateEvmAccount(params: GetOrCreateEvmAccountParams)
     console.error("Error creating wallet:", error);
     throw error;
   }
+}
+
+export async function getEvmAccountFromAddress(address: Address): Promise<EvmServerAccount> {
+  return await cdpClient.evm.getAccount({ address });
 }
 
 export async function requestFaucetFunds(params: RequestFaucetParams) {

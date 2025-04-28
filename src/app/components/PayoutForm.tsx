@@ -17,22 +17,17 @@
 import { useState, useRef } from 'react'
 import { useWallet } from '@/app/context/WalletContext'
 import { TransferResultsModal } from './TransferResultsModal'
-import { TransferResult } from '@/lib/types/transfer'
-
-type PayoutRow = {
-  recipientId: string
-  amount: string
-}
+import { TransferResult, TransferRecipient } from '@/lib/types/transfer'
 
 const MAX_ROWS = 100
 
 export const PayoutForm = () => {
   const { activeToken, refreshBalance, evmAddress } = useWallet()
-  const [payoutRows, setPayoutRows] = useState<PayoutRow[]>([{ recipientId: '', amount: '' }])
+  const [payoutRows, setPayoutRows] = useState<TransferRecipient[]>([{ recipientId: '', amount: '' }])
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showResults, setShowResults] = useState(false)
-  const [transferResults, setTransferResults] = useState<TransferResult[]>([])
+  const [transferResults, setTransferResults] = useState<TransferResult | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const addRow = () => {
@@ -44,7 +39,7 @@ export const PayoutForm = () => {
     setError(null)
   }
 
-  const updateRow = (index: number, field: keyof PayoutRow, value: string) => {
+  const updateRow = (index: number, field: keyof TransferRecipient, value: string) => {
     const newRows = [...payoutRows]
     newRows[index][field] = value
     setPayoutRows(newRows)
@@ -110,10 +105,7 @@ export const PayoutForm = () => {
         },
         body: JSON.stringify({
           token: activeToken,
-          data: payoutRows.map(row => ({
-            to: row.recipientId,
-            amount: row.amount
-          }))
+          recipients: payoutRows
         }),
       })
 
@@ -123,12 +115,12 @@ export const PayoutForm = () => {
         throw new Error(data.error || 'Transfer failed');
       }
 
-      setTransferResults(data.results);
+      setTransferResults(data);
       setShowResults(true);
       refreshBalance(activeToken); // Refresh balance after successful transfer
 
-      // Only clear form if all transfers succeeded
-      if (data.results.every((r: TransferResult) => r.success)) {
+      // Only clear form if transfer succeeded
+      if (data.success) {
         setPayoutRows([{ recipientId: '', amount: '' }]);
       }
     } catch (error) {

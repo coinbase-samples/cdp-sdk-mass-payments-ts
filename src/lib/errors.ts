@@ -14,17 +14,23 @@
  * limitations under the License.
  */
 
-import { NextResponse } from "next/server";
-import { getOrCreateEvmAccountFromId } from "@/lib/cdp";
-
-export async function GET(req: Request) {
-  try {
-    const userAddress = req.headers.get('x-user-address') as string
-    const account = await getOrCreateEvmAccountFromId({ accountId: userAddress })
-
-    return NextResponse.json({ address: account.address })
-  } catch (error) {
-    console.error("Error creating wallet:", error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
   }
 }
+
+export class InsufficientBalanceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InsufficientBalanceError';
+  }
+}
+
+export class InsufficientGasError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InsufficientGasError';
+  }
+} 

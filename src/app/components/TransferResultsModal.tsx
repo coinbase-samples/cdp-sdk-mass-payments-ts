@@ -20,7 +20,7 @@ import { TransferResult } from '@/lib/types/transfer';
 interface TransferResultsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  results: TransferResult;
+  results: TransferResult | null;
 }
 
 export const TransferResultsModal = ({ isOpen, onClose, results }: TransferResultsModalProps) => {
@@ -36,7 +36,7 @@ export const TransferResultsModal = ({ isOpen, onClose, results }: TransferResul
     }
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !results) return null;
 
   return (
     <div className="fixed inset-0 flex items-start justify-center z-50 pt-16">
@@ -58,7 +58,7 @@ export const TransferResultsModal = ({ isOpen, onClose, results }: TransferResul
             <div>
               <h3 className="text-green-600 font-medium mb-2">Successful Transfer</h3>
               <div className="space-y-2">
-                {results.recipients.map((recipient, index) => (
+                {results.recipients?.map((recipient, index) => (
                   <div key={index} className="mb-2 p-2 bg-green-100 text-green-700 rounded">
                     <div className="font-semibold">Success</div>
                     <div>Recipient ID: {recipient.recipientId}</div>
@@ -85,7 +85,7 @@ export const TransferResultsModal = ({ isOpen, onClose, results }: TransferResul
             <div>
               <h3 className="text-red-600 font-medium mb-2">Failed Transfer</h3>
               <div className="space-y-2">
-                {results.recipients.map((recipient, index) => (
+                {results.recipients?.map((recipient, index) => (
                   <div key={index} className="mb-2 p-2 bg-red-100 text-red-700 rounded">
                     <div className="font-semibold">Failed</div>
                     <div>Recipient ID: {recipient.recipientId}</div>
