@@ -38,12 +38,7 @@ export async function executeEthTransfer(
   amount: string
 ): Promise<{ success: boolean; error?: string; hash?: string }> {
   try {
-    const viemAccount = toAccount(account);
-    const walletClient = createWalletClient({
-      account: viemAccount,
-      transport: http(config.BASE_SEPOLIA_NODE_URL),
-      chain: baseSepolia,
-    });
+    const walletClient = getWalletClient(account);
 
     const amountWei = parseEther(amount);
 
@@ -70,8 +65,8 @@ export async function executeEthTransfer(
     return { success: true, hash };
   } catch (error) {
     console.error('ETH transfer error:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error during ETH transfer'
     };
   }
@@ -84,12 +79,7 @@ export async function executeErc20Transfer(
   amount: string
 ): Promise<{ success: boolean; error?: string; hash?: string }> {
   try {
-    const viemAccount = toAccount(account);
-    const walletClient = createWalletClient({
-      account: viemAccount,
-      transport: http(config.BASE_SEPOLIA_NODE_URL),
-      chain: baseSepolia,
-    });
+    const walletClient = getWalletClient(account);
 
     const tokenAddress = TOKEN_ADDRESSES[tokenSymbol];
     if (!tokenAddress) {
@@ -129,8 +119,8 @@ export async function executeErc20Transfer(
     return { success: true, hash };
   } catch (error) {
     console.error('ERC20 transfer error:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error during ERC20 transfer'
     };
   }
@@ -166,4 +156,13 @@ export const getBalanceForAddress = async (
   ]);
 
   return formatUnits(rawBalance as bigint, decimals as number);
+}
+
+const getWalletClient = (account: EvmServerAccount) => {
+  const viemAccount = toAccount(account);
+  return createWalletClient({
+    account: viemAccount,
+    transport: http(config.BASE_SEPOLIA_NODE_URL),
+    chain: baseSepolia,
+  });
 }

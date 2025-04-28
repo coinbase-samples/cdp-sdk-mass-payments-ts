@@ -18,8 +18,9 @@ import { CdpClient, EvmServerAccount } from "@coinbase/cdp-sdk";
 import { config } from '@/lib/config';
 import { getWalletAddress, createWallet } from '@/lib/db';
 import { createHash } from 'crypto';
-import { GetOrCreateEvmAccountParams, RequestFaucetParams } from "@/lib/types/CDP";
+import { GetOrCreateEvmAccountParams, RequestFaucetParams } from "@/lib/types/cdp";
 import { publicClient } from "@/lib/viem";
+import { baseSepolia } from "viem/chains";
 
 const cdpClient: CdpClient = new CdpClient({
   apiKeyId: config.CDP_API_KEY_ID,
@@ -56,7 +57,7 @@ export async function getOrCreateEvmAccount(params: GetOrCreateEvmAccountParams)
 export async function requestFaucetFunds(params: RequestFaucetParams) {
   const { transactionHash } = await cdpClient.evm.requestFaucet({
     address: params.address,
-    network: "base-sepolia",
+    network: baseSepolia.network,
     token: params.tokenName,
   });
 
