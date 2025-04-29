@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { createPublicClient, erc20Abi, formatUnits, http, Address, createWalletClient } from "viem";
+import { createPublicClient, erc20Abi, formatUnits, http, Address, createWalletClient, InsufficientFundsError } from "viem";
 import { baseSepolia } from "viem/chains";
 import { config } from "@/lib/config";
 import { EvmServerAccount } from "@coinbase/cdp-sdk";
@@ -45,21 +45,53 @@ export async function getWalletClient(account: EvmServerAccount) {
 export async function checkGasFunds(address: Address, token: string, addresses: Address[], amounts: bigint[]): Promise<void> {
   try {
     // Get ETH balance for gas
-    const balance = await publicClient.getBalance({ address });
+    const ethBalance = await publicClient.getBalance({ address });
+
+    // Check token balance first (either ETH or ERC20)
+    if (token === 'eth') {
+      const totalTransferAmount = amounts.reduce((sum, amount) => sum + amount, BigInt(0));
+      if (ethBalance < totalTransferAmount) {
+        throw new InsufficientBalanceError(
+          `Insufficient ETH balance for transfer. Required: ${formatUnits(totalTransferAmount, 18)} ETH`
+        );
+      }
+    } else {
+      const tokenAddress = TOKEN_ADDRESSES[token];
+      if (!tokenAddress) {
+        throw new Error(`Unknown token symbol: ${token}`);
+      }
+
+      // Check ERC20 token balance
+      const tokenBalance = await publicClient.readContract({
+        abi: erc20Abi,
+        address: tokenAddress,
+        functionName: 'balanceOf',
+        args: [address],
+      });
+
+      const totalTransferAmount = amounts.reduce((sum, amount) => sum + amount, BigInt(0));
+
+      if (tokenBalance < totalTransferAmount) {
+        throw new InsufficientBalanceError(
+          `Insufficient ${token.toUpperCase()} balance. Required: ${formatUnits(totalTransferAmount, 18)} ${token.toUpperCase()}`
+        );
+      }
+    }
 
     // Estimate gas for the transfer
-    const gasEstimate = await publicClient.estimateContractGas({
+    let gasEstimate;
+    gasEstimate = await publicClient.estimateContractGas({
       address: config.GASLITE_DROP_ADDRESS as Address,
       abi: GasliteDrop,
       functionName: token === 'eth' ? 'airdropETH' : 'airdropERC20',
       args: token === 'eth'
         ? [addresses, amounts]
         : [
-            TOKEN_ADDRESSES[token],
-            addresses,
-            amounts,
-            amounts.reduce((sum, amount) => sum + amount, BigInt(0)),
-          ],
+          TOKEN_ADDRESSES[token],
+          addresses,
+          amounts,
+          amounts.reduce((sum, amount) => sum + amount, BigInt(0)),
+        ],
       account: address,
       value: token === 'eth' ? amounts.reduce((sum, amount) => sum + amount, BigInt(0)) : undefined,
     });
@@ -67,28 +99,39 @@ export async function checkGasFunds(address: Address, token: string, addresses: 
     // Add 20% buffer to gas estimate
     const totalGasCost = (gasEstimate * BigInt(120)) / BigInt(100);
 
+    // Check if there's enough ETH for gas
+    if (ethBalance < totalGasCost) {
+      throw new InsufficientGasError(`Insufficient ETH for gas fees. Required: ${formatUnits(totalGasCost, 18)} ETH`);
+    }
+
+    // For ETH transfers, we need to check total cost (transfer + gas)
     if (token === 'eth') {
-      // For ETH transfers, we need to check gas + total transfer amount
       const totalTransferAmount = amounts.reduce((sum, amount) => sum + amount, BigInt(0));
       const totalCost = totalGasCost + totalTransferAmount;
 
-      if (balance < totalCost) {
+      if (ethBalance < totalCost) {
         throw new InsufficientBalanceError(
           `Insufficient ETH balance. Required: ${formatUnits(totalCost, 18)} ETH (${formatUnits(totalTransferAmount, 18)} ETH for transfer + ${formatUnits(totalGasCost, 18)} ETH for gas)`
         );
       }
-    } else {
-      // For ERC20 transfers, we only need to check gas
-      if (balance < totalGasCost) {
-        throw new InsufficientGasError(`Insufficient ETH for gas fees. Required: ${formatUnits(totalGasCost, 18)} ETH`);
-      }
     }
   } catch (error) {
+    console.error(error);
     if (error instanceof InsufficientGasError || error instanceof InsufficientBalanceError) {
       throw error;
     }
-    // If we can't estimate gas, we should fail the operation
-    throw new Error(`Failed to estimate gas: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+    if (error instanceof Error) {
+      const errMsg = error.message.toLowerCase();
+
+      if (errMsg.includes('failed to estimate gas') && errMsg.includes('the total cost (gas * gas fee + value')) {
+        throw new InsufficientBalanceError('Insufficient balance for transaction');
+      }
+      throw new Error(`Failed to estimate gas: ${error.message}`);
+    }
+
+    throw new Error(`Failed to estimate gas: unknown error ${error}`)
+
   }
 }
 

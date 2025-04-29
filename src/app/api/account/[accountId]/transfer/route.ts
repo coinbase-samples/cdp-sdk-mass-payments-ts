@@ -19,7 +19,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkGasFunds } from "@/lib/viem";
 import { Address } from "viem";
 import { executeTransfers } from "@/lib/transfer";
-import { TransferResult, TransferRecipient } from "@/lib/types/transfer";
 
 export async function POST(
   request: NextRequest,
@@ -60,6 +59,8 @@ export async function POST(
     // Convert amounts to BigInt
     const bigIntAmounts = amounts.map((amount: string) => BigInt(Math.floor(parseFloat(amount) * 10 ** 18)));
 
+    const sanitizedToken = token.toLowerCase();
+
     // Get recipient EVM accounts
     const recipientAccounts = await Promise.all(
       recipientIds.map((recipientId: string) => getOrCreateEvmAccountFromId({ accountId: recipientId }))
@@ -67,10 +68,10 @@ export async function POST(
     const recipientAddresses = recipientAccounts.map(account => account.address as Address);
 
     // Check if account has sufficient funds
-    await checkGasFunds(account.address, token, recipientAddresses, bigIntAmounts);
+    await checkGasFunds(account.address, sanitizedToken, recipientAddresses, bigIntAmounts);
 
     // Create transaction
-    const result = await executeTransfers(account, token, recipients.map(recipient => ({
+    const result = await executeTransfers(account, sanitizedToken, recipients.map(recipient => ({
       to: recipient.recipientId,
       amount: recipient.amount
     })));
