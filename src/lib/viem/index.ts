@@ -21,17 +21,12 @@ import { EvmServerAccount } from "@coinbase/cdp-sdk";
 import GasliteDrop from "@/contracts/GasliteDrop.json";
 import { InsufficientBalanceError, InsufficientGasError } from '@/lib/errors';
 import { toAccount } from "viem/accounts";
+import { TOKEN_ADDRESSES } from "@/lib/constant";
 
 export const publicClient = createPublicClient({
   chain: baseSepolia,
   transport: http(config.BASE_SEPOLIA_NODE_URL),
 });
-
-export const TOKEN_ADDRESSES: Record<string, Address> = {
-  usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  usdt: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
-  dai: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
-};
 
 export async function getWalletClient(account: EvmServerAccount) {
   console.log('ACCOUNT', account.address)

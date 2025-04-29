@@ -16,9 +16,10 @@
 
 import { EvmServerAccount } from "@coinbase/cdp-sdk";
 import { getOrCreateEvmAccountFromId } from "@/lib/cdp";
-import { publicClient, TOKEN_ADDRESSES, executeBatchTransfer } from "@/lib/viem";
+import { publicClient, executeBatchTransfer } from "@/lib/viem";
 import { erc20Abi, Address } from "viem";
 import { TransferRequest, TransferResult } from "@/lib/types/transfer";
+import { TOKEN_ADDRESSES } from "@/lib/constant";
 
 export async function executeTransfers(
   account: EvmServerAccount,

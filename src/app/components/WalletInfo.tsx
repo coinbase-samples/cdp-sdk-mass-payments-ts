@@ -15,16 +15,9 @@
  */
 
 import { useWallet } from '@/app/context/WalletContext'
+import { tokenDisplayMap, TokenKey } from '@/lib/constant'
 import { useState } from 'react'
 
-type TokenKey = 'eth' | 'usdc' | 'eurc' | 'cbbtc'
-
-const tokenDisplayMap: Record<TokenKey, string> = {
-  eth: 'ETH',
-  usdc: 'USDC',
-  eurc: 'EURC',
-  cbbtc: 'cbBTC'
-}
 
 export const WalletInfo = () => {
   const { evmAddress, balances, activeToken, setActiveToken, refreshBalance } = useWallet()
