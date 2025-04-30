@@ -21,6 +21,9 @@ import { TransferResult, TransferRecipient } from '@/lib/types/transfer'
 
 const MAX_ROWS = 100
 
+// Email validation regex
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export const PayoutForm = () => {
   const { activeToken, refreshBalance, evmAddress } = useWallet()
   const [payoutRows, setPayoutRows] = useState<TransferRecipient[]>([{ recipientId: '', amount: '' }])
@@ -29,6 +32,18 @@ export const PayoutForm = () => {
   const [showResults, setShowResults] = useState(false)
   const [transferResults, setTransferResults] = useState<TransferResult | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const validateEmails = (rows: TransferRecipient[]) => {
+    const invalidEmails = rows
+      .map((row, index) => ({ email: row.recipientId, index }))
+      .filter(({ email }) => email && !EMAIL_REGEX.test(email))
+    
+    if (invalidEmails.length > 0) {
+      setError(`Invalid email format in row ${invalidEmails[0].index + 1}: ${invalidEmails[0].email}`)
+      return false
+    }
+    return true
+  }
 
   const addRow = () => {
     if (payoutRows.length >= MAX_ROWS) {
@@ -78,6 +93,10 @@ export const PayoutForm = () => {
           return { recipientId, amount }
         })
 
+        if (!validateEmails(parsedRows)) {
+          return
+        }
+
         setPayoutRows(parsedRows)
         setError(null)
       } catch (err) {
@@ -96,6 +115,11 @@ export const PayoutForm = () => {
     try {
       if (!evmAddress) {
         throw new Error('No wallet connected');
+      }
+
+      if (!validateEmails(payoutRows)) {
+        setIsSubmitting(false);
+        return;
       }
 
       const response = await fetch(`/api/account/${evmAddress}/transfer`, {
@@ -171,8 +195,8 @@ export const PayoutForm = () => {
         {payoutRows.map((row, index) => (
           <div key={index} className="flex gap-1 sm:gap-2 items-center">
             <input
-              type="text"
-              placeholder="Recipient ID"
+              type="email"
+              placeholder="Recipient Email"
               value={row.recipientId}
               onChange={(e) => updateRow(index, 'recipientId', e.target.value)}
               className="flex-1 p-1 sm:p-2 border rounded text-sm sm:text-base min-w-0 disabled:opacity-50"

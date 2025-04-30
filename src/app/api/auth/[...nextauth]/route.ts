@@ -14,45 +14,28 @@
  * limitations under the License.
  */
 
-import NextAuth, { SessionStrategy } from "next-auth"
-import CredentialsProvider from "next-auth/providers/credentials"
-import { SiweMessage } from "siwe"
-import { getServerSession } from "next-auth"
+import NextAuth, { SessionStrategy, AuthOptions, DefaultSession } from "next-auth"
+import GoogleProvider from "next-auth/providers/google"
+import GithubProvider from "next-auth/providers/github"
 import { config } from "@/lib/config"
 
-export const authOptions = {
+declare module "next-auth" {
+  interface Session extends DefaultSession {
+    user: {
+      id: string;
+    } & DefaultSession["user"]
+  }
+}
+
+export const authOptions: AuthOptions = {
   providers: [
-    CredentialsProvider({
-      name: "Ethereum",
-      credentials: {
-        message: { label: "Message", type: "text" },
-        signature: { label: "Signature", type: "text" },
-      },
-      async authorize(credentials, req) {
-        try {
-          const siwe = new SiweMessage(JSON.parse(credentials?.message || "{}"))
-          const nextAuthUrl = new URL(config.NEXTAUTH_URL!)
-          const domain = nextAuthUrl.host
-
-          const nonce = (await getServerSession(authOptions))?.csrfToken
-
-          const result = await siwe.verify({
-            signature: credentials?.signature || "",
-            domain,
-            nonce,
-          })
-
-          if (result.success) {
-            return {
-              id: siwe.address,
-            }
-          }
-          return null
-        } catch (e) {
-          console.error("SIWE Auth error", e)
-          return null
-        }
-      },
+    GoogleProvider({
+      clientId: config.GOOGLE_CLIENT_ID!,
+      clientSecret: config.GOOGLE_CLIENT_SECRET!,
+    }),
+    GithubProvider({
+      clientId: config.GITHUB_CLIENT_ID!,
+      clientSecret: config.GITHUB_CLIENT_SECRET!,
     }),
   ],
   session: {
@@ -60,11 +43,12 @@ export const authOptions = {
   },
   secret: config.NEXTAUTH_SECRET,
   callbacks: {
-    async session({ session, token }: { session: any; token: any }) {
-      session.address = token.sub
-      session.user.name = token.sub
+    async session({ session, token }) {
+      if (session.user && token.sub) {
+        session.user.id = token.sub
+      }
       return session
-    },
+    }
   },
 }
 

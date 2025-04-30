@@ -16,27 +16,15 @@
 
 'use client'
 
-import { useEffect } from 'react'
-import { useSession, signOut } from 'next-auth/react'
-import { useAccount } from 'wagmi'
-import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { PayoutHeader } from './PayoutHeader'
 import { WalletInfo } from './WalletInfo'
 import { PayoutForm } from './PayoutForm'
 
 export const Payout = () => {
   const { status } = useSession()
-  const { isConnected } = useAccount()
-  const router = useRouter()
 
-  useEffect(() => {
-    if (status === 'authenticated' && !isConnected) {
-      // Wallet is disconnected but session is active — force logout
-      signOut({ redirect: false }).then(() => {
-        router.replace('/')
-      })
-    }
-  }, [status, isConnected, router])
+  if (status !== 'authenticated') return null
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">

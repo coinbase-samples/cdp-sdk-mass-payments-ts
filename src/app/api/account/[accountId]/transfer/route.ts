@@ -24,6 +24,9 @@ import { TransferRequest } from "@/lib/types/transfer";
 import { config } from "@/lib/config";
 import { InsufficientBalanceError } from "@/lib/errors";
 
+// Email validation regex
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { accountId: string } }
@@ -42,6 +45,18 @@ export async function POST(
     if (!Array.isArray(recipients) || recipients.length === 0) {
       return NextResponse.json(
         { error: 'At least one recipient is required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate recipient IDs are valid email addresses
+    const invalidEmails = recipients
+      .map((recipient, index) => ({ email: recipient.recipientId, index }))
+      .filter(({ email }) => !EMAIL_REGEX.test(email));
+
+    if (invalidEmails.length > 0) {
+      return NextResponse.json(
+        { error: `Invalid email format in row ${invalidEmails[0].index + 1}: ${invalidEmails[0].email}` },
         { status: 400 }
       );
     }
@@ -85,7 +100,6 @@ export async function POST(
         functionName: 'balanceOf',
         args: [account.address],
       });
-
 
       if (tokenBalance < totalTransferAmount) {
         throw new InsufficientBalanceError(

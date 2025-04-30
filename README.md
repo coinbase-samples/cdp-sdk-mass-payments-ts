@@ -72,6 +72,8 @@ bun install
 openssl rand -base64 32
 ```
 
+- Generate a ClientId and Secret for [Sign in with Google](https://developers.google.com/identity/sign-in/web/sign-in) and [Sign in with Github](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app)
+
 Set that output in the .env.local for JWT and CSRF token signing
 
 4. Start the local Postgres/Neon database:

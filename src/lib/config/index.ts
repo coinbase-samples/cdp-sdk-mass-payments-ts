@@ -28,6 +28,10 @@ const requiredEnvVars = [
   // Auth Configuration
   'NEXTAUTH_URL',
   'NEXTAUTH_SECRET',
+  'GOOGLE_CLIENT_ID',
+  'GOOGLE_CLIENT_SECRET',
+  'GITHUB_CLIENT_ID',
+  'GITHUB_CLIENT_SECRET',
 
   // RPC Endpoint
   'BASE_SEPOLIA_NODE_URL',

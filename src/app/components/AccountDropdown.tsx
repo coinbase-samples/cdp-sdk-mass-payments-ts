@@ -17,18 +17,16 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { signOut } from 'next-auth/react'
-import { useAccount, useEnsName } from 'wagmi'
+import { signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 export default function AccountDropdown() {
-  const { address } = useAccount()
-  const { data: ensName } = useEnsName({ address })
+  const { data: session } = useSession()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const displayName = ensName || address?.slice(0, 6) + '...' + address?.slice(-4)
+  const displayName = session?.user?.email || 'User'
 
   const handleSignOut = async () => {
     await signOut({ redirect: false })
@@ -45,7 +43,7 @@ export default function AccountDropdown() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  if (!address) return null
+  if (!session?.user) return null
 
   return (
     <div className="relative inline-block text-left" ref={dropdownRef}>
