@@ -22,11 +22,30 @@ Special thanks to [HeimLabs](https://www.heimlabs.com/) for foundational work on
 ## Prerequisites
 
 - Git
-- Node.js (v18 or higher)
-- Coinbase Developer Platform (CDP) Account
-- Vercel Account (for Neon DB)
+- [Bun](https://bun.sh/docs/installation)
+- [Coinbase Developer Platform (CDP) Account](https://portal.cdp.coinbase.com)
+- Docker & Docker-Compose (for local NeonDB testing)
 
 ## Getting Started
+
+0. Deploy the Drop Contract
+
+This application uses the Gaslite Drop smart contract for the batch transfers.
+The .env.example file contains the contract address for the Gaslite Drop contract
+deployed on the Base Sepolia testnet. If you want to deploy your own contract,
+you can clone the [Gaselite Core](https://github.com/PopPunkLLC/gaslite-core),
+and deploy by calling:
+
+```sh
+cd gaslite-core
+forge build
+forge script script/GasliteDrop.s.sol \
+  --rpc-url https://sepolia.base.org \
+  --broadcast \
+  --chain-id 84532
+```
+
+Note: you will need to have your Base Sepolia wallet private key in your env as PRIVATE_KEY
 
 1. Clone the repository:
 
@@ -45,13 +64,26 @@ bun install
 
 - Copy .env.example to .env.local
 - Get an API Key ID and Secret from [Coinbase Developer Platform portal](https://portal.cdp.coinbase.com)
-- Create a [Neon DB instance on Vercel](https://vercel.com/marketplace/neon) (for the postgres)
-- Fill out all environment variables as expected
-
-4. Start the development server:
+- Generate a WalletSecret from the [CDP Portal Wallet Page](https://portal.cdp.coinbase.com/products/wallet-api)
+- Navigate to the Node page on the CDP Portal to get a Base Sepolia RPC URL for BASE_SEPOLIA_NODE_URL
+- Generate a secret for NEXTAUTH_SECRET via:
 
 ```sh
-bun dev
+openssl rand -base64 32
+```
+
+Set that output in the .env.local for JWT and CSRF token signing
+
+4. Start the local Postgres/Neon database:
+
+```sh
+bun run start-local-db
+```
+
+5. Start the development server:
+
+```sh
+bun run dev
 ```
 
 The application will be available at [http://localhost:3000](http://localhost:3000).
