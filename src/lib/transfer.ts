@@ -14,20 +14,25 @@
  * limitations under the License.
  */
 
-import { checkGasFunds, getWalletClient } from "@/lib/viem";
+import { getWalletClient, publicClient } from "@/lib/viem";
 import { Address } from "viem";
 import { TransferParams, TransferResult } from "@/lib/types/transfer";
-import { TOKEN_ADDRESSES, TokenKey } from "@/lib/constant";
+import { TOKEN_ADDRESSES } from "@/lib/constant";
 import { config } from "./config";
 import GasliteDrop from "@/contracts/GasliteDrop.json";
 
 export async function executeTransfers(params: TransferParams): Promise<TransferResult> {
   const { senderAccount, token, addresses, amounts, totalAmount } = params;
 
+  console.log('Executing batch transfer:', senderAccount.address, token, addresses, amounts, totalAmount);
+
   try {
     const walletClient = await getWalletClient(senderAccount);
-
-    await checkGasFunds(senderAccount.address, token, addresses, amounts, totalAmount);
+    
+    // Get the latest nonce and add 1 for the next transaction
+    const nonce = await publicClient.getTransactionCount({
+      address: senderAccount.address as Address,
+    }) + 1;
 
     let hash: `0x${string}`;
     if (token === 'eth') {
@@ -37,6 +42,7 @@ export async function executeTransfers(params: TransferParams): Promise<Transfer
         functionName: 'airdropETH',
         args: [addresses, amounts],
         value: totalAmount,
+        nonce: nonce,
       });
     } else {
       hash = await walletClient.writeContract({
@@ -44,13 +50,17 @@ export async function executeTransfers(params: TransferParams): Promise<Transfer
         abi: GasliteDrop,
         functionName: 'airdropERC20',
         args: [
-          TOKEN_ADDRESSES[token as TokenKey],
+          TOKEN_ADDRESSES[token],
           addresses,
           amounts,
           totalAmount,
         ],
+        nonce: nonce,
       });
     }
+
+    // Wait for transaction confirmation
+    await publicClient.waitForTransactionReceipt({ hash });
 
     return {
       success: true,

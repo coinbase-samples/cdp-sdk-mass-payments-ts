@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getBalanceForAddress } from '@/lib/viem';
+import { getBalanceForAddress } from '@/lib/balance';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(

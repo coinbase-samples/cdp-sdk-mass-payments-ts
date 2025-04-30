@@ -1,4 +1,4 @@
-import { Address, zeroAddress } from "viem";
+import { Address, parseAbi, zeroAddress } from "viem";
 
 export const TOKEN_ADDRESSES: Record<TokenKey, Address> = {
   eth: zeroAddress,
@@ -22,3 +22,7 @@ export const tokenDecimals: Record<TokenKey, number> = {
   eurc: 6,
   cbbtc: 8,
 }
+
+export const erc20approveAbi = parseAbi([
+  "function approve(address spender, uint256 amount) public",
+]);

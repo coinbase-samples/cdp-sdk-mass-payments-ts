@@ -16,11 +16,13 @@
 
 import { getEvmAccountFromAddress, getOrCreateEvmAccountFromId } from "@/lib/cdp";
 import { NextRequest, NextResponse } from "next/server";
-import { checkGasFunds } from "@/lib/viem";
-import { Address, parseUnits } from "viem";
+import { getWalletClient, publicClient } from "@/lib/viem";
+import { Address, erc20Abi, formatUnits, parseUnits } from "viem";
 import { executeTransfers } from "@/lib/transfer";
-import { tokenDecimals, TokenKey } from "@/lib/constant";
+import { erc20approveAbi, TOKEN_ADDRESSES, tokenDecimals, TokenKey } from "@/lib/constant";
 import { TransferRequest } from "@/lib/types/transfer";
+import { config } from "@/lib/config";
+import { InsufficientBalanceError } from "@/lib/errors";
 
 export async function POST(
   request: NextRequest,
@@ -63,14 +65,51 @@ export async function POST(
 
     const sanitizedToken = token.toLowerCase();
 
+    if (token === 'eth') {
+      const ethBalance = await publicClient.getBalance({ address: account.address });
+      if (ethBalance < totalTransferAmount) {
+        throw new InsufficientBalanceError(
+          `Insufficient ETH balance for transfer. Required: ${formatUnits(totalTransferAmount, 18)} ETH`
+        );
+      }
+    } else {
+      const tokenAddress = TOKEN_ADDRESSES[token as TokenKey];
+      if (!tokenAddress) {
+        throw new Error(`Unknown token symbol: ${token}`);
+      }
+
+      // Check ERC20 token balance
+      const tokenBalance = await publicClient.readContract({
+        abi: erc20Abi,
+        address: tokenAddress,
+        functionName: 'balanceOf',
+        args: [account.address],
+      });
+
+
+      if (tokenBalance < totalTransferAmount) {
+        throw new InsufficientBalanceError(
+          `Insufficient ${token.toUpperCase()} balance. Required: ${formatUnits(totalTransferAmount, decimalPrecision)} ${token.toUpperCase()}`
+        );
+      }
+    }
+
     // Get recipient EVM accounts
     const recipientAccounts = await Promise.all(
       recipientIds.map((recipientId: string) => getOrCreateEvmAccountFromId({ accountId: recipientId }))
     );
     const recipientAddresses = recipientAccounts.map(account => account.address as Address);
 
-    // Check if account has sufficient funds
-    await checkGasFunds(account.address, sanitizedToken, recipientAddresses, amounts, totalTransferAmount);
+    if (token !== 'eth') {
+      const tokenAddress = TOKEN_ADDRESSES[token as TokenKey];
+      const walletClient = await getWalletClient(account);
+      await walletClient.writeContract({
+        abi: erc20approveAbi,
+        address: tokenAddress as Address,
+        functionName: 'approve',
+        args: [config.GASLITE_DROP_ADDRESS as Address, totalTransferAmount],
+      });
+    }
 
     // Create transaction
     const result = await executeTransfers({
