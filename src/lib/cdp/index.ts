@@ -16,12 +16,13 @@
 
 import { CdpClient, EvmServerAccount } from "@coinbase/cdp-sdk";
 import { config } from '@/lib/config';
-import { getWalletAddress, createWallet } from '@/lib/db';
+import { getWalletAddress, createWallet } from '@/lib/db/wallet';
 import { createHash } from 'crypto';
 import { GetOrCreateEvmAccountParams, RequestFaucetParams } from "@/lib/types/cdp";
 import { publicClient } from "@/lib/viem";
 import { baseSepolia } from "viem/chains";
 import { Address } from "viem";
+import { getUserByEmailHash, createUser, hashEmail } from "@/lib/db/user";
 
 const cdpClient: CdpClient = new CdpClient({
   apiKeyId: config.CDP_API_KEY_ID,
@@ -35,18 +36,21 @@ export async function getOrCreateEvmAccountFromId(params: GetOrCreateEvmAccountP
   }
 
   try {
-    const id = createHash('sha256')
-      .update(`mass-payments-${config.NODE_ENV}-${params.accountId}`)
-      .digest('hex');
+    const sha256Email = hashEmail(params.accountId);
+    let user = await getUserByEmailHash(sha256Email);
 
-    const existingWallet = await getWalletAddress(id);
+    // If user doesn't exist, create them
+    if (!user) {
+      user = await createUser(sha256Email, '');
+    }
+
+    const existingWallet = await getWalletAddress(user.userId);
     if (existingWallet) {
       return await cdpClient.evm.getAccount({ address: existingWallet.address });
     }
 
     const evmAccount = await cdpClient.evm.createAccount();
-
-    await createWallet(id, evmAccount.address);
+    await createWallet(user.userId, evmAccount.address);
 
     return evmAccount;
   } catch (error) {

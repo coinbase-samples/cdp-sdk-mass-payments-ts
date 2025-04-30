@@ -14,23 +14,13 @@
  * limitations under the License.
  */
 
-import { neon, neonConfig } from '@neondatabase/serverless';
-import { config } from './config';
+import { sql } from "@/lib/db/neon";
 
-if (config.NODE_ENV === 'development') {
-  neonConfig.fetchEndpoint = (host) => {
-    const [protocol, port] = host === 'db.localtest.me' ? ['http', 4444] : ['https', 443];
-    return `${protocol}://${host}:${port}/sql`;
-  };
-}
-
-const sql = neon(config.DATABASE_URL);
-
-export async function getWalletAddress(id: string) {
+export async function getWalletAddress(userId: string) {
   const result = await sql`
     SELECT address 
     FROM wallet_addresses 
-    WHERE id = ${id}
+    WHERE user_id = ${userId}
   `;
 
   if (result.length > 0) {
@@ -40,9 +30,9 @@ export async function getWalletAddress(id: string) {
   return null;
 }
 
-export async function createWallet(id: string, address: string) {
+export async function createWallet(userId: string, address: string) {
   await sql`
-    INSERT INTO wallet_addresses (id, address)
-    VALUES (${id}, ${address})
+    INSERT INTO wallet_addresses (user_id, address)
+    VALUES (${userId}, ${address})
   `;
 } 

@@ -2,8 +2,8 @@ import { neon, neonConfig } from '@neondatabase/serverless';
 import { $ } from 'bun';
 
 async function startDockerCompose() {
-  console.log('Starting docker-compose...');
-  await $`docker-compose up -d`;
+  console.log('Starting docker compose...');
+  await $`docker compose up -d`;
 }
 
 async function waitForDbReady(sql, retries = 10, delay = 2000) {
@@ -22,8 +22,17 @@ async function waitForDbReady(sql, retries = 10, delay = 2000) {
 
 async function createTable(sql) {
   await sql`
+    CREATE TABLE IF NOT EXISTS user_details (
+      user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      sha256_email TEXT NOT NULL UNIQUE,
+      partner_ids TEXT[] NOT NULL DEFAULT '{}'
+    );
+  `;
+  console.log('user_details table created.');
+
+  await sql`
     CREATE TABLE IF NOT EXISTS wallet_addresses (
-      id TEXT PRIMARY KEY,
+      user_id UUID PRIMARY KEY REFERENCES user_details(user_id),
       address TEXT NOT NULL
     );
   `;

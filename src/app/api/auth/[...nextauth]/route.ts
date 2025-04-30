@@ -18,6 +18,7 @@ import NextAuth, { SessionStrategy, AuthOptions, DefaultSession } from "next-aut
 import GoogleProvider from "next-auth/providers/google"
 import GithubProvider from "next-auth/providers/github"
 import { config } from "@/lib/config"
+import { createUser, getUserByEmailHash, addPartnerId, hashEmail, createPartnerId } from "@/lib/db/user"
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -43,11 +44,32 @@ export const authOptions: AuthOptions = {
   },
   secret: config.NEXTAUTH_SECRET,
   callbacks: {
+    async signIn({ user, account }) {
+      if (!user.email || !account) return false;
+
+      const sha256Email = hashEmail(user.email);
+      const partnerId = createPartnerId(account.provider, account.providerAccountId);
+
+      const existingUser = await getUserByEmailHash(sha256Email);
+      if (existingUser) {
+        // Add new partner ID if it doesn't exist
+        await addPartnerId(sha256Email, partnerId);
+      } else {
+        // Create new user with the partner ID
+        await createUser(sha256Email, partnerId);
+      }
+
+      return true;
+    },
     async session({ session, token }) {
       if (session.user && token.sub) {
-        session.user.id = token.sub
+        const sha256Email = hashEmail(token.sub);
+        const user = await getUserByEmailHash(sha256Email);
+        if (user) {
+          session.user.id = user.userId;
+        }
       }
-      return session
+      return session;
     }
   },
 }
