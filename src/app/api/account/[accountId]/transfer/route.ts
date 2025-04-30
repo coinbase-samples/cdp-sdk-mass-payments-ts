@@ -17,15 +17,17 @@
 import { getEvmAccountFromAddress, getOrCreateEvmAccountFromId } from "@/lib/cdp";
 import { NextRequest, NextResponse } from "next/server";
 import { checkGasFunds } from "@/lib/viem";
-import { Address } from "viem";
+import { Address, parseUnits } from "viem";
 import { executeTransfers } from "@/lib/transfer";
+import { tokenDecimals, TokenKey } from "@/lib/constant";
+import { TransferRequest } from "@/lib/types/transfer";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { accountId: string } }
 ): Promise<NextResponse> {
   try {
-    const { recipients, token } = await request.json();
+    const { recipients, token }: TransferRequest = await request.json();
 
     // Validate input
     if (!recipients || !token) {
@@ -54,10 +56,10 @@ export async function POST(
 
     // Extract recipientIds and amounts
     const recipientIds = recipients.map(r => r.recipientId);
-    const amounts = recipients.map(r => r.amount);
 
-    // Convert amounts to BigInt
-    const bigIntAmounts = amounts.map((amount: string) => BigInt(Math.floor(parseFloat(amount) * 10 ** 18)));
+    const decimalPrecision = tokenDecimals[token as TokenKey];
+    const amounts = recipients.map(r => parseUnits(r.amount, decimalPrecision));
+    const totalTransferAmount = amounts.reduce((sum, amount) => sum + amount, BigInt(0));
 
     const sanitizedToken = token.toLowerCase();
 
@@ -68,15 +70,18 @@ export async function POST(
     const recipientAddresses = recipientAccounts.map(account => account.address as Address);
 
     // Check if account has sufficient funds
-    await checkGasFunds(account.address, sanitizedToken, recipientAddresses, bigIntAmounts);
+    await checkGasFunds(account.address, sanitizedToken, recipientAddresses, amounts, totalTransferAmount);
 
     // Create transaction
-    const result = await executeTransfers(account, sanitizedToken, recipients.map(recipient => ({
-      to: recipient.recipientId,
-      amount: recipient.amount
-    })));
+    const result = await executeTransfers({
+      senderAccount: account,
+      token: sanitizedToken as TokenKey,
+      addresses: recipientAddresses,
+      amounts,
+      totalAmount: totalTransferAmount,
+    });
 
-    return NextResponse.json(result);
+    return NextResponse.json({ recipients, ...result });
   } catch (error) {
     console.error('Transfer error:', error);
     return NextResponse.json(

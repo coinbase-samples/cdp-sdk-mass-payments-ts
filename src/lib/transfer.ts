@@ -14,75 +14,53 @@
  * limitations under the License.
  */
 
-import { EvmServerAccount } from "@coinbase/cdp-sdk";
-import { getOrCreateEvmAccountFromId } from "@/lib/cdp";
-import { publicClient, executeBatchTransfer } from "@/lib/viem";
-import { erc20Abi, Address } from "viem";
-import { TransferRequest, TransferResult } from "@/lib/types/transfer";
-import { TOKEN_ADDRESSES } from "@/lib/constant";
+import { checkGasFunds, getWalletClient } from "@/lib/viem";
+import { Address } from "viem";
+import { TransferParams, TransferResult } from "@/lib/types/transfer";
+import { TOKEN_ADDRESSES, TokenKey } from "@/lib/constant";
+import { config } from "./config";
+import GasliteDrop from "@/contracts/GasliteDrop.json";
 
-export async function executeTransfers(
-  account: EvmServerAccount,
-  token: string,
-  data: TransferRequest['data']
-): Promise<TransferResult> {
+export async function executeTransfers(params: TransferParams): Promise<TransferResult> {
+  const { senderAccount, token, addresses, amounts, totalAmount } = params;
+
   try {
-    // Get or create EVM accounts for all recipients
-    const recipients = await Promise.all(
-      data.map(async (row) => {
-        const recipientEvmAccount = await getOrCreateEvmAccountFromId({ accountId: row.to });
-        return {
-          address: recipientEvmAccount.address,
-          amount: row.amount,
-          recipientId: row.to
-        };
-      })
-    );
+    const walletClient = await getWalletClient(senderAccount);
 
-    // Prepare arrays for batch transfer
-    const addresses = recipients.map(r => r.address as Address);
-    const amounts = recipients.map(r => parseFloat(r.amount));
+    await checkGasFunds(senderAccount.address, token, addresses, amounts, totalAmount);
 
-    // Convert amounts to wei
-    const amountsWei = token === 'eth'
-      ? amounts.map(amount => BigInt(Math.floor(amount * 10 ** 18)))
-      : await (async () => {
-        const tokenAddress = TOKEN_ADDRESSES[token];
-        const decimals = await publicClient.readContract({
-          abi: erc20Abi,
-          address: tokenAddress,
-          functionName: 'decimals',
-        });
-        return amounts.map(amount => BigInt(Math.floor(amount * 10 ** decimals)));
-      })();
-
-    // Execute batch transfer
-    const hash = await executeBatchTransfer(
-      account,
-      token,
-      addresses,
-      amountsWei
-    );
+    let hash: `0x${string}`;
+    if (token === 'eth') {
+      hash = await walletClient.writeContract({
+        address: config.GASLITE_DROP_ADDRESS as Address,
+        abi: GasliteDrop,
+        functionName: 'airdropETH',
+        args: [addresses, amounts],
+        value: totalAmount,
+      });
+    } else {
+      hash = await walletClient.writeContract({
+        address: config.GASLITE_DROP_ADDRESS as Address,
+        abi: GasliteDrop,
+        functionName: 'airdropERC20',
+        args: [
+          TOKEN_ADDRESSES[token as TokenKey],
+          addresses,
+          amounts,
+          totalAmount,
+        ],
+      });
+    }
 
     return {
       success: true,
       hash,
-      recipients: recipients.map(recipient => ({
-        recipientId: recipient.recipientId,
-        recipientAddress: recipient.address,
-        amount: recipient.amount
-      }))
-    };
+    }
   } catch (error) {
     console.error('Error executing batch transfer:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
-      recipients: data.map(row => ({
-        recipientId: row.to,
-        recipientAddress: '',
-        amount: row.amount
-      }))
     };
   }
-} 
+}

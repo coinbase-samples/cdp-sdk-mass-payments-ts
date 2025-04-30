@@ -14,24 +14,33 @@
  * limitations under the License.
  */
 
+import { TokenKey } from '@/lib/constant';
+import { EvmServerAccount } from '@coinbase/cdp-sdk';
+
 export type TransferRequest = {
   token: string;
-  data: Array<{
-    to: string;
-    amount: string;
-  }>;
+  recipients: TransferRecipient[];
+}
+
+export type TransferParams = {
+  senderAccount: EvmServerAccount;
+  token: TokenKey;
+  addresses: `0x${string}`[];
+  amounts: bigint[];
+  totalAmount: bigint;
 }
 
 export type TransferResult = {
   success: boolean;
   hash?: string;
   error?: string;
-  recipients: Array<{
-    recipientId: string;
-    recipientAddress: string;
-    amount: string;
-  }>;
 }
+
+export type TransferResponse = {
+  recipients: TransferRecipient[];
+  result: TransferResult;
+}
+
 
 export type TransferRecipient = {
   recipientId: string;
