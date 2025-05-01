@@ -5,7 +5,7 @@
 ![Tailwind](https://img.shields.io/badge/-SCSS-cd6799?style=for-the-badge&logo=SASS&logoColor=white)
 ![Coinbase](https://img.shields.io/badge/Coinbase-0052FF?style=for-the-badge&logo=Coinbase&logoColor=white)
 
-A demo application of custodial server wallet management using the new [Coinbase Developer Platform SDK Wallet API](https://docs.cdp.coinbase.com/wallet-api-v2/docs/welcome). Users can sign in with their email (currently powered by Google or Github) and send funds to other emails. All emails are backed by Coinbase Server Wallets running on Base Sepolia.
+A demo application of developer-custodied server wallet payments tool using the new [Coinbase Developer Platform SDK Wallet API](https://docs.cdp.coinbase.com/wallet-api-v2/docs/welcome). Users can sign in with their email (currently powered by Google or Github) and send funds to other emails. All emails are backed by Coinbase Server Wallets running on Base Sepolia.
 
 ## License
 
@@ -72,7 +72,7 @@ bun install
 openssl rand -base64 32
 ```
 
-- Generate a ClientId and Secret for [Sign in with Google](https://developers.google.com/identity/sign-in/web/sign-in) and [Sign in with Github](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app)
+- Generate a ClientId and Secret for either [Sign in with Google](https://developers.google.com/identity/sign-in/web/sign-in) or [Sign in with Github](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app) (or both)
 
 Set that output in the .env.local for JWT and CSRF token signing
 

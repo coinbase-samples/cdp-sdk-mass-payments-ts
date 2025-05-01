@@ -4,17 +4,22 @@ import GithubProvider from "next-auth/providers/github"
 import { config } from "@/lib/config"
 import { createUser, getUserByEmailHash, addPartnerId, hashEmail, createPartnerId } from "@/lib/db/user"
 
+const providers = [];
+if (config.GOOGLE_CLIENT_ID) providers.push(
+  GoogleProvider({
+    clientId: config.GOOGLE_CLIENT_ID!,
+    clientSecret: config.GOOGLE_CLIENT_SECRET!,
+  })
+)
+if (config.GITHUB_CLIENT_ID) providers.push(
+  GithubProvider({
+    clientId: config.GITHUB_CLIENT_ID!,
+    clientSecret: config.GITHUB_CLIENT_SECRET!,
+  })
+)
+
 export const authOptions: AuthOptions = {
-  providers: [
-    GoogleProvider({
-      clientId: config.GOOGLE_CLIENT_ID!,
-      clientSecret: config.GOOGLE_CLIENT_SECRET!,
-    }),
-    GithubProvider({
-      clientId: config.GITHUB_CLIENT_ID!,
-      clientSecret: config.GITHUB_CLIENT_SECRET!,
-    }),
-  ],
+  providers,
   session: {
     strategy: "jwt" as SessionStrategy,
   },
