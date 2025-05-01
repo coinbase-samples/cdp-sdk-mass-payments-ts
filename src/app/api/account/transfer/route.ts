@@ -1,0 +1,145 @@
+/**
+ * Copyright 2025-present Coinbase Global, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { getEvmAccountFromId, getOrCreateEvmAccountFromId } from "@/lib/cdp";
+import { NextRequest, NextResponse } from "next/server";
+import { getWalletClient, publicClient } from "@/lib/viem";
+import { Address, erc20Abi, formatUnits, parseUnits } from "viem";
+import { executeTransfers } from "@/lib/transfer";
+import { erc20approveAbi, TOKEN_ADDRESSES, tokenDecimals, TokenKey } from "@/lib/constant";
+import { TransferRequest } from "@/lib/types/transfer";
+import { config } from "@/lib/config";
+import { InsufficientBalanceError } from "@/lib/errors";
+import { getUserByEmailHash, hashEmail, createUser } from "@/lib/db/user";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+// Email validation regex
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+export async function POST(
+  request: NextRequest,
+): Promise<NextResponse> {
+  // Get account details
+  const session = await getServerSession(authOptions)
+
+  try {
+    const { recipients, token }: TransferRequest = await request.json();
+
+    if (!recipients || !token) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    if (!Array.isArray(recipients) || recipients.length === 0) {
+      return NextResponse.json(
+        { error: 'At least one recipient is required' },
+        { status: 400 }
+      );
+    }
+
+    const invalidEmails = recipients
+      .map((recipient, index) => ({ email: recipient.recipientId, index }))
+      .filter(({ email }) => !EMAIL_REGEX.test(email));
+
+    if (invalidEmails.length > 0) {
+      return NextResponse.json(
+        { error: `Invalid email format in row ${invalidEmails[0].index + 1}: ${invalidEmails[0].email}` },
+        { status: 400 }
+      );
+    }
+
+    const account = await getEvmAccountFromId(session!.user.id)
+
+    const recipientIds = recipients.map(r => r.recipientId);
+
+    const decimalPrecision = tokenDecimals[token as TokenKey];
+    const amounts = recipients.map(r => parseUnits(r.amount, decimalPrecision));
+    const totalTransferAmount = amounts.reduce((sum, amount) => sum + amount, BigInt(0));
+
+    const sanitizedToken = token.toLowerCase();
+
+    if (token === 'eth') {
+      const ethBalance = await publicClient.getBalance({ address: account.address });
+      if (ethBalance < totalTransferAmount) {
+        throw new InsufficientBalanceError(
+          `Insufficient ETH balance for transfer. Required: ${formatUnits(totalTransferAmount, 18)} ETH`
+        );
+      }
+    } else {
+      const tokenAddress = TOKEN_ADDRESSES[token as TokenKey];
+      if (!tokenAddress) {
+        throw new Error(`Unknown token symbol: ${token}`);
+      }
+
+      const tokenBalance = await publicClient.readContract({
+        abi: erc20Abi,
+        address: tokenAddress,
+        functionName: 'balanceOf',
+        args: [account.address],
+      });
+
+      if (tokenBalance < totalTransferAmount) {
+        throw new InsufficientBalanceError(
+          `Insufficient ${token.toUpperCase()} balance. Required: ${formatUnits(totalTransferAmount, decimalPrecision)} ${token.toUpperCase()}`
+        );
+      }
+    }
+
+    const recipientAccounts = await Promise.all(
+      recipientIds.map(async (recipientId: string) => {
+        const sha256Email = hashEmail(recipientId);
+        let user = await getUserByEmailHash(sha256Email);
+
+        if (!user) {
+          user = await createUser(sha256Email, '');
+        }
+
+        return await getOrCreateEvmAccountFromId({ accountId: user.userId });
+      })
+    );
+    const recipientAddresses = recipientAccounts.map(account => account.address as Address);
+
+    if (token !== 'eth') {
+      const tokenAddress = TOKEN_ADDRESSES[token as TokenKey];
+      const walletClient = await getWalletClient(account);
+      await walletClient.writeContract({
+        abi: erc20approveAbi,
+        address: tokenAddress as Address,
+        functionName: 'approve',
+        args: [config.GASLITE_DROP_ADDRESS as Address, totalTransferAmount],
+      });
+    }
+
+    const result = await executeTransfers({
+      senderAccount: account,
+      token: sanitizedToken as TokenKey,
+      addresses: recipientAddresses,
+      amounts,
+      totalAmount: totalTransferAmount,
+    });
+
+    return NextResponse.json({ recipients, ...result });
+  } catch (error) {
+    console.error('Transfer error:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to process transfer' },
+      { status: 500 }
+    );
+  }
+} 
