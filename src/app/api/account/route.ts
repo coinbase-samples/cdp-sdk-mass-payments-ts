@@ -19,7 +19,7 @@ import { getOrCreateEvmAccountFromId } from "@/lib/cdp";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 
-export async function GET(req: Request) {
+export async function GET() {
   const session = await getServerSession(authOptions)
 
   try {

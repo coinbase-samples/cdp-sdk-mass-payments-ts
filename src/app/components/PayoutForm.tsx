@@ -16,8 +16,8 @@
 
 import { useState, useRef } from 'react'
 import { useWallet } from '@/app/context/WalletContext'
-import { TransferResultsModal } from './TransferResultsModal'
-import { TransferResult, TransferRecipient } from '@/lib/types/transfer'
+import { TransferResponseModal } from '@/app/components/TransferResponseModal'
+import { TransferRecipient, TransferResponse } from '@/lib/types/transfer'
 
 const MAX_ROWS = 100
 
@@ -30,7 +30,7 @@ export const PayoutForm = () => {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showResults, setShowResults] = useState(false)
-  const [transferResults, setTransferResults] = useState<TransferResult | null>(null)
+  const [transferResponse, setTransferResponse] = useState<TransferResponse | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const validateEmails = (rows: TransferRecipient[]) => {
@@ -100,6 +100,7 @@ export const PayoutForm = () => {
         setPayoutRows(parsedRows)
         setError(null)
       } catch (err) {
+        console.error('Error parsing CSV:', err)
         setError('Error parsing CSV file. Please ensure it has the correct format: recipientId,amount')
       }
     }
@@ -133,17 +134,18 @@ export const PayoutForm = () => {
         }),
       })
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Transfer failed');
+        const errData = await response.json();
+        throw new Error(errData.error || 'Transfer failed');
       }
 
-      setTransferResults(data);
+      const transferResponse: TransferResponse = await response.json();
+
+      setTransferResponse(transferResponse);
       setShowResults(true);
       refreshBalance(activeToken);
 
-      if (data.success) {
+      if (transferResponse.result.success) {
         setPayoutRows([{ recipientId: '', amount: '' }]);
       }
     } catch (error) {
@@ -156,75 +158,75 @@ export const PayoutForm = () => {
 
   return (
     <div className="w-full p-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-        <h2 className="text-lg font-semibold">Payout Recipients</h2>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isSubmitting}
-            className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Upload CSV
-          </button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            accept=".csv"
-            className="hidden"
-            disabled={isSubmitting}
-          />
-          <button
-            onClick={addRow}
-            disabled={isSubmitting}
-            className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Add Row
-          </button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
-      <div className="space-y-2">
-        {payoutRows.map((row, index) => (
-          <div key={index} className="flex gap-1 sm:gap-2 items-center">
-            <input
-              type="email"
-              placeholder="Recipient Email"
-              value={row.recipientId}
-              onChange={(e) => updateRow(index, 'recipientId', e.target.value)}
-              className="flex-1 p-1 sm:p-2 border rounded text-sm sm:text-base min-w-0 disabled:opacity-50"
+      <div className="flex flex-col items-end">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2 w-full max-w-[800px]">
+          <h2 className="text-lg font-semibold">Payout Recipients</h2>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => fileInputRef.current?.click()}
               disabled={isSubmitting}
-            />
+              className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Upload CSV
+            </button>
             <input
-              type="number"
-              placeholder="Amount"
-              value={row.amount}
-              onChange={(e) => updateRow(index, 'amount', e.target.value)}
-              className="w-16 sm:w-24 p-1 sm:p-2 border rounded text-sm sm:text-base disabled:opacity-50"
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".csv"
+              className="hidden"
               disabled={isSubmitting}
             />
             <button
-              onClick={() => removeRow(index)}
+              onClick={addRow}
               disabled={isSubmitting}
-              className="px-3 py-1.5 sm:py-2 bg-red-500 text-white rounded text-sm sm:text-base whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm w-fit max-w-[120px] sm:max-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Remove
+              Add Row
             </button>
           </div>
-        ))}
-      </div>
+        </div>
 
-      <div className="mt-4 text-sm text-gray-500">
-        {payoutRows.length} of {MAX_ROWS} rows used
-      </div>
+        {error && (
+          <div className="mb-4 p-2 bg-red-100 text-red-700 rounded w-full max-w-[800px]">
+            {error}
+          </div>
+        )}
 
-      <div className="flex justify-start sm:justify-end">
+        <div className="space-y-2 w-full max-w-[800px]">
+          {payoutRows.map((row, index) => (
+            <div key={index} className="flex gap-1 sm:gap-2 items-center">
+              <input
+                type="email"
+                placeholder="Recipient Email"
+                value={row.recipientId}
+                onChange={(e) => updateRow(index, 'recipientId', e.target.value)}
+                className="flex-1 p-1 sm:p-2 border rounded text-sm sm:text-base min-w-0 disabled:opacity-50"
+                disabled={isSubmitting}
+              />
+              <input
+                type="number"
+                placeholder="Amount"
+                value={row.amount}
+                onChange={(e) => updateRow(index, 'amount', e.target.value)}
+                className="w-48 sm:w-64 p-1 sm:p-2 border rounded text-sm sm:text-base disabled:opacity-50"
+                disabled={isSubmitting}
+              />
+              <button
+                onClick={() => removeRow(index)}
+                disabled={isSubmitting}
+                className="px-3 py-1.5 sm:py-2 bg-red-500 text-white rounded text-sm sm:text-base whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 text-sm text-gray-500">
+          {payoutRows.length} of {MAX_ROWS} rows used
+        </div>
+
         <button
           onClick={handleConfirm}
           disabled={isSubmitting}
@@ -244,10 +246,10 @@ export const PayoutForm = () => {
         </button>
       </div>
 
-      <TransferResultsModal
+      <TransferResponseModal
         isOpen={showResults}
         onClose={() => setShowResults(false)}
-        results={transferResults}
+        response={transferResponse}
       />
     </div>
   )
