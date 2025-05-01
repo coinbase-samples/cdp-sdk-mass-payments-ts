@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-import NextAuth, { SessionStrategy, AuthOptions, DefaultSession } from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
-import GithubProvider from "next-auth/providers/github"
-import { config } from "@/lib/config"
-import { createUser, getUserByEmailHash, addPartnerId, hashEmail, createPartnerId } from "@/lib/db/user"
+import { authOptions } from "@/lib/auth";
+import NextAuth, { DefaultSession } from "next-auth"
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -26,52 +23,6 @@ declare module "next-auth" {
       id: string;
     } & DefaultSession["user"]
   }
-}
-
-export const authOptions: AuthOptions = {
-  providers: [
-    GoogleProvider({
-      clientId: config.GOOGLE_CLIENT_ID!,
-      clientSecret: config.GOOGLE_CLIENT_SECRET!,
-    }),
-    GithubProvider({
-      clientId: config.GITHUB_CLIENT_ID!,
-      clientSecret: config.GITHUB_CLIENT_SECRET!,
-    }),
-  ],
-  session: {
-    strategy: "jwt" as SessionStrategy,
-  },
-  secret: config.NEXTAUTH_SECRET,
-  callbacks: {
-    async signIn({ user, account }) {
-      if (!user.email || !account) return false;
-
-      const sha256Email = hashEmail(user.email);
-      const partnerId = createPartnerId(account.provider, account.providerAccountId);
-
-      const existingUser = await getUserByEmailHash(sha256Email);
-      if (existingUser) {
-        // Add new partner ID if it doesn't exist
-        await addPartnerId(sha256Email, partnerId);
-      } else {
-        // Create new user with the partner ID
-        await createUser(sha256Email, partnerId);
-      }
-
-      return true;
-    },
-    async session({ session, token }) {
-      if (session.user && token.sub) {
-        const sha256Email = hashEmail(token.sub);
-        const user = await getUserByEmailHash(sha256Email);
-        if (user) {
-          session.user.id = user.userId;
-        }
-      }
-      return session;
-    }
-  },
 }
 
 const handler = NextAuth(authOptions)

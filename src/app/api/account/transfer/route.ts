@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getEvmAccountFromAddress, getOrCreateEvmAccountFromId } from "@/lib/cdp";
+import { getEvmAccountFromId, getOrCreateEvmAccountFromId } from "@/lib/cdp";
 import { NextRequest, NextResponse } from "next/server";
 import { getWalletClient, publicClient } from "@/lib/viem";
 import { Address, erc20Abi, formatUnits, parseUnits } from "viem";
@@ -23,14 +23,19 @@ import { erc20approveAbi, TOKEN_ADDRESSES, tokenDecimals, TokenKey } from "@/lib
 import { TransferRequest } from "@/lib/types/transfer";
 import { config } from "@/lib/config";
 import { InsufficientBalanceError } from "@/lib/errors";
+import { getUserByEmailHash, hashEmail, createUser } from "@/lib/db/user";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { accountId: string } }
 ): Promise<NextResponse> {
+  // Get account details
+  const session = await getServerSession(authOptions)
+
   try {
     const { recipients, token }: TransferRequest = await request.json();
 
@@ -61,15 +66,7 @@ export async function POST(
       );
     }
 
-    // Get account details
-    const { accountId } = await params;
-    const account = await getEvmAccountFromAddress(accountId as Address);
-    if (!account) {
-      return NextResponse.json(
-        { error: 'Account not found' },
-        { status: 404 }
-      );
-    }
+    const account = await getEvmAccountFromId(session!.user.id)
 
     // Extract recipientIds and amounts
     const recipientIds = recipients.map(r => r.recipientId);
@@ -108,9 +105,20 @@ export async function POST(
       }
     }
 
-    // Get recipient EVM accounts
+    // Get recipient EVM accounts, creating users and wallets if they don't exist
     const recipientAccounts = await Promise.all(
-      recipientIds.map((recipientId: string) => getOrCreateEvmAccountFromId({ accountId: recipientId }))
+      recipientIds.map(async (recipientId: string) => {
+        const sha256Email = hashEmail(recipientId);
+        let user = await getUserByEmailHash(sha256Email);
+
+        if (!user) {
+          // Create user if they don't exist
+          user = await createUser(sha256Email, '');
+        }
+
+        // This will create a wallet if it doesn't exist
+        return await getOrCreateEvmAccountFromId({ accountId: user.userId });
+      })
     );
     const recipientAddresses = recipientAccounts.map(account => account.address as Address);
 

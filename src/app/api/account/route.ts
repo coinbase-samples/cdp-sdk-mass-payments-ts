@@ -16,11 +16,14 @@
 
 import { NextResponse } from "next/server";
 import { getOrCreateEvmAccountFromId } from "@/lib/cdp";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export async function GET(req: Request) {
+  const session = await getServerSession(authOptions)
   try {
-    const userAddress = req.headers.get('x-user-address') as string
-    const account = await getOrCreateEvmAccountFromId({ accountId: userAddress })
+
+    const account = await getOrCreateEvmAccountFromId({ accountId: session!.user.id })
 
     return NextResponse.json({ address: account.address })
   } catch (error) {

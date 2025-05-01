@@ -17,12 +17,10 @@
 import { CdpClient, EvmServerAccount } from "@coinbase/cdp-sdk";
 import { config } from '@/lib/config';
 import { getWalletAddress, createWallet } from '@/lib/db/wallet';
-import { createHash } from 'crypto';
 import { GetOrCreateEvmAccountParams, RequestFaucetParams } from "@/lib/types/cdp";
 import { publicClient } from "@/lib/viem";
 import { baseSepolia } from "viem/chains";
 import { Address } from "viem";
-import { getUserByEmailHash, createUser, hashEmail } from "@/lib/db/user";
 
 const cdpClient: CdpClient = new CdpClient({
   apiKeyId: config.CDP_API_KEY_ID,
@@ -36,21 +34,15 @@ export async function getOrCreateEvmAccountFromId(params: GetOrCreateEvmAccountP
   }
 
   try {
-    const sha256Email = hashEmail(params.accountId);
-    let user = await getUserByEmailHash(sha256Email);
-
-    // If user doesn't exist, create them
-    if (!user) {
-      user = await createUser(sha256Email, '');
-    }
-
-    const existingWallet = await getWalletAddress(user.userId);
+    const existingWallet = await getWalletAddress(params.accountId);
     if (existingWallet) {
+      // Return the existing wallet
       return await cdpClient.evm.getAccount({ address: existingWallet.address });
     }
 
+    // Create new wallet only if user doesn't have one
     const evmAccount = await cdpClient.evm.createAccount();
-    await createWallet(user.userId, evmAccount.address);
+    await createWallet(params.accountId, evmAccount.address);
 
     return evmAccount;
   } catch (error) {
@@ -61,6 +53,16 @@ export async function getOrCreateEvmAccountFromId(params: GetOrCreateEvmAccountP
 
 export async function getEvmAccountFromAddress(address: Address): Promise<EvmServerAccount> {
   return await cdpClient.evm.getAccount({ address });
+}
+
+export async function getEvmAccountFromId(userId: string): Promise<EvmServerAccount> {
+  const walletRecord = await getWalletAddress(userId);
+
+  if (walletRecord === null) {
+    throw new Error("no address found associated with userId")
+  }
+
+  return cdpClient.evm.getAccount({ address: walletRecord.address })
 }
 
 export async function requestFaucetFunds(params: RequestFaucetParams) {

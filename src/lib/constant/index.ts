@@ -9,6 +9,12 @@ export const TOKEN_ADDRESSES: Record<TokenKey, Address> = {
 
 export type TokenKey = 'eth' | 'usdc' | 'eurc' | 'cbbtc'
 
+export const validTokens: TokenKey[] = ['eth', 'usdc', 'eurc', 'cbbtc']
+
+export function isTokenKey(value: string): value is TokenKey {
+  return validTokens.includes(value as TokenKey);
+}
+
 export const tokenDisplayMap: Record<TokenKey, string> = {
   eth: 'ETH',
   usdc: 'USDC',

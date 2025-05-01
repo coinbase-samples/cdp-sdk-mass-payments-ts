@@ -14,27 +14,32 @@
  * limitations under the License.
  */
 
-import { requestFaucetFunds } from '@/lib/cdp';
+import { getEvmAccountFromId, requestFaucetFunds } from '@/lib/cdp';
 import { NextRequest, NextResponse } from 'next/server';
+import { isTokenKey } from '@/lib/constant';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { accountId: string } }
 ) {
-  const { accountId } = await params;
+  const session = await getServerSession(authOptions)
+
+  const account = await getEvmAccountFromId(session!.user.id)
+
   const token = req.nextUrl.searchParams.get('token');
 
   if (!token) {
     return NextResponse.json({ error: 'Token parameter is required' }, { status: 400 });
   }
 
-  if (token !== 'eth' && token !== 'usdc' && token !== 'eurc' && token !== 'cbbtc') {
+  if (!isTokenKey(token)) {
     return NextResponse.json({ error: 'Invalid token parameter' }, { status: 400 });
   }
 
   try {
     await requestFaucetFunds({
-      address: accountId as `0x${string}`,
+      address: account.address,
       tokenName: token
     });
 

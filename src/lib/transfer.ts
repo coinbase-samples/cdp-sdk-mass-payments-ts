@@ -20,6 +20,8 @@ import { TOKEN_ADDRESSES } from "@/lib/constant";
 import { config } from "./config";
 import GasliteDrop from "@/contracts/GasliteDrop.json";
 import { encodeFunctionData } from "viem";
+import { randomUUID } from 'crypto';
+import { publicClient } from "@/lib/viem";
 
 const MAX_RETRIES = 3;
 const GAS_BUMP_PERCENTAGE = 20; // Increase gas by 20% each retry
@@ -62,10 +64,16 @@ export async function executeTransfers(params: TransferParams): Promise<Transfer
             type: 'eip1559',
           },
           network: 'base-sepolia',
-          idempotencyKey: `transfer-${Date.now()}-${retryCount}`,
+          idempotencyKey: randomUUID(),
         });
 
         transactionHash = result.transactionHash;
+        
+        // Wait for transaction confirmation
+        await publicClient.waitForTransactionReceipt({
+          hash: transactionHash as `0x${string}`,
+        });
+        
         break; // Success, exit retry loop
       } catch (error) {
         lastError = error as Error;
