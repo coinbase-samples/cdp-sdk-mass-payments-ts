@@ -5,7 +5,7 @@
 ![Tailwind](https://img.shields.io/badge/-SCSS-cd6799?style=for-the-badge&logo=SASS&logoColor=white)
 ![Coinbase](https://img.shields.io/badge/Coinbase-0052FF?style=for-the-badge&logo=Coinbase&logoColor=white)
 
-A full-stack Next.js application for managing balances and paying out to other users using the [Coinbase Developer Platform SDK Wallet API](https://docs.cdp.coinbase.com/wallet-api-v2/docs/welcome).
+A demo application of custodial server wallet management using the new [Coinbase Developer Platform SDK Wallet API](https://docs.cdp.coinbase.com/wallet-api-v2/docs/welcome). Users can sign in with their email (currently powered by Google or Github) and send funds to other emails. All emails are backed by Coinbase Server Wallets running on Base Sepolia.
 
 ## License
 
