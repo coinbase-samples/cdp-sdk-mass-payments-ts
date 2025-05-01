@@ -27,9 +27,10 @@ export const authOptions: AuthOptions = {
       const partnerId = createPartnerId(account.provider, account.providerAccountId);
 
       let userDetails = await getUserByEmailHash(sha256Email);
-      if (userDetails && !userDetails.partnerIds.includes(partnerId)) {
-        // Add new partner ID if it doesn't exist
-        userDetails = await addPartnerId(sha256Email, partnerId);
+      if (userDetails) {
+        if (!userDetails.partnerIds.includes(partnerId)) {
+          userDetails = await addPartnerId(sha256Email, partnerId);
+        }
       } else {
         // Create new user with the partner ID
         userDetails = await createUser(sha256Email, partnerId);
@@ -41,9 +42,20 @@ export const authOptions: AuthOptions = {
 
       return true;
     },
+    async jwt({ token, user }) {
+      if (user) {
+        token.sub = user.email!;
+        const sha256Email = hashEmail(user.email!);
+        const userDetails = await getUserByEmailHash(sha256Email);
+        if (userDetails) {
+          token.userId = userDetails.userId;
+        }
+      }
+      return token;
+    },
     async session({ session, token }) {
-      if (session.user && token.sub) {
-        const sha256Email = hashEmail(token.sub);
+      if (session.user && token.email) {
+        const sha256Email = hashEmail(token.email);
         const user = await getUserByEmailHash(sha256Email);
         if (user) {
           session.user.id = user.userId;

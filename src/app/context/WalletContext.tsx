@@ -40,7 +40,7 @@ const WalletContext = createContext<WalletContextType>({
 export const useWallet = () => useContext(WalletContext)
 
 export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const [evmAddress, setEvmAddress] = useState<string>()
   const [accountId, setAccountId] = useState<string>()
   const [balances, setBalances] = useState<Partial<Record<TokenKey, string>>>({})
@@ -59,7 +59,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     if (!evmAddress) return
 
     const query = token !== 'eth' ? `?token=${token}` : ''
-    const res = await fetch(`/api/account/${evmAddress}/balance${query}`)
+    const res = await fetch(`/api/account/balance${query}`)
     if (res.ok) {
       const { balance } = await res.json()
       setBalances(prev => ({ ...prev, [token]: balance }))

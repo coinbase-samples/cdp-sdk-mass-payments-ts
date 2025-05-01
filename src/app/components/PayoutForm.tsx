@@ -37,7 +37,7 @@ export const PayoutForm = () => {
     const invalidEmails = rows
       .map((row, index) => ({ email: row.recipientId, index }))
       .filter(({ email }) => email && !EMAIL_REGEX.test(email))
-    
+
     if (invalidEmails.length > 0) {
       setError(`Invalid email format in row ${invalidEmails[0].index + 1}: ${invalidEmails[0].email}`)
       return false
@@ -122,7 +122,7 @@ export const PayoutForm = () => {
         return;
       }
 
-      const response = await fetch(`/api/account/${evmAddress}/transfer`, {
+      const response = await fetch(`/api/account/transfer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

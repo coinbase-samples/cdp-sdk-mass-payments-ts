@@ -27,7 +27,7 @@ export const WalletInfo = () => {
     if (!evmAddress) return;
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/account/${evmAddress}/faucet?token=${activeToken}`);
+      const res = await fetch(`/api/account/faucet?token=${activeToken}`);
       if (res.ok) {
         refreshBalance(activeToken);
       }

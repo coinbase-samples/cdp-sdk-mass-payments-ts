@@ -21,6 +21,7 @@ import { getServerSession } from "next-auth";
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions)
+
   try {
 
     const account = await getOrCreateEvmAccountFromId({ accountId: session!.user.id })
