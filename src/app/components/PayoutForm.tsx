@@ -107,7 +107,7 @@ export const PayoutForm = () => {
   }
 
   const handleConfirm = async () => {
-    if (isSubmitting) return; // Prevent double submission
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
     setError(null);
@@ -141,9 +141,8 @@ export const PayoutForm = () => {
 
       setTransferResults(data);
       setShowResults(true);
-      refreshBalance(activeToken); // Refresh balance after successful transfer
+      refreshBalance(activeToken);
 
-      // Only clear form if transfer succeeded
       if (data.success) {
         setPayoutRows([{ recipientId: '', amount: '' }]);
       }

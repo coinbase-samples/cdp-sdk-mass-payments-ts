@@ -30,7 +30,7 @@ export default function AccountDropdown() {
 
   const handleSignOut = async () => {
     await signOut({ redirect: false })
-    router.replace('/') // back to main screen (Login shows when session is gone)
+    router.replace('/')
   }
 
   useEffect(() => {

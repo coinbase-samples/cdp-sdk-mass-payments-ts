@@ -1,7 +1,6 @@
 {
-  "name": "cdp-mass-payouts",
+  "name": "cdp-sdk-mass-payments-ts",
   "version": "0.1.0",
-  "private": true,
   "scripts": {
     "start-local-db": "bun scripts/start-local-db.js",
     "dev": "next dev --turbopack",

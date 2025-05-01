@@ -22,7 +22,6 @@ export default withAuth(
   async function middleware(req: NextRequestWithAuth) {
     const token = await getToken({ req })
 
-    // If there's no token, return unauthorized
     if (!token?.sub) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -30,7 +29,6 @@ export default withAuth(
       )
     }
 
-    // Continue to the route if authenticated
     return NextResponse.next()
   },
   {
@@ -40,10 +38,8 @@ export default withAuth(
   }
 )
 
-// Configure which routes to protect
 export const config = {
   matcher: [
     '/api/account/:path*',
-    // Add other protected routes here
   ]
 } 

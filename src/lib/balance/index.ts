@@ -1,3 +1,19 @@
+/**
+ * Copyright 2025-present Coinbase Global, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import { Address, erc20Abi, formatUnits } from "viem";
 import { publicClient } from "@/lib/viem";
 import { TOKEN_ADDRESSES, TokenKey } from "@/lib/constant";
@@ -7,7 +23,6 @@ export const getBalanceForAddress = async (
   tokenSymbol?: string,
 ): Promise<string> => {
   if (!tokenSymbol) {
-    // Get native ETH balance
     const balance = await publicClient.getBalance({ address });
     return formatUnits(balance, 18); // ETH is always 18 decimals
   }

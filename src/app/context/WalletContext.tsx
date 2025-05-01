@@ -74,7 +74,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (evmAddress) {
-      refreshBalance('eth') // preload ETH by default
+      refreshBalance('eth')
     }
   }, [evmAddress])
 

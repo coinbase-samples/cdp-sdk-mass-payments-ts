@@ -42,17 +42,13 @@ const requiredEnvVars = [
 
 type EnvVar = typeof requiredEnvVars[number];
 
-// Type for our environment variables
 type EnvConfig = {
   [K in EnvVar]: string;
 };
 
-// Cache for validated config
 let validatedConfig: EnvConfig | null = null;
 
-// Validate environment variables
 const validateEnv = (): EnvConfig => {
-  // Return cached config if it exists
   if (validatedConfig) {
     return validatedConfig;
   }
@@ -73,10 +69,8 @@ const validateEnv = (): EnvConfig => {
     throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
   }
 
-  // Cache the validated config
   validatedConfig = config as EnvConfig;
   return validatedConfig;
 };
 
-// Export validated config
 export const config = validateEnv(); 

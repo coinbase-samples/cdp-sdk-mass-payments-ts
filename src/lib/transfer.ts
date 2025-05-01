@@ -23,10 +23,6 @@ import { encodeFunctionData } from "viem";
 import { randomUUID } from 'crypto';
 import { publicClient } from "@/lib/viem";
 
-const MAX_RETRIES = 3;
-const GAS_BUMP_PERCENTAGE = 20; // Increase gas by 20% each retry
-
-// Initialize CDP client
 const cdpClient = new CdpClient({
   apiKeyId: config.CDP_API_KEY_ID,
   apiKeySecret: config.CDP_API_KEY_SECRET,
@@ -39,58 +35,34 @@ export async function executeTransfers(params: TransferParams): Promise<Transfer
   console.log('Executing batch transfer:', senderAccount.address, token, addresses, amounts, totalAmount);
 
   try {
-    let retryCount = 0;
-    let lastError: Error | null = null;
-    let transactionHash: string | undefined;
+    const contractAddress = config.GASLITE_DROP_ADDRESS;
+    const functionName = token === 'eth' ? 'airdropETH' : 'airdropERC20';
+    const args = token === 'eth'
+      ? [addresses, amounts]
+      : [TOKEN_ADDRESSES[token], addresses, amounts, totalAmount];
 
-    while (retryCount < MAX_RETRIES) {
-      try {
-        const contractAddress = config.GASLITE_DROP_ADDRESS;
-        const functionName = token === 'eth' ? 'airdropETH' : 'airdropERC20';
-        const args = token === 'eth' 
-          ? [addresses, amounts]
-          : [TOKEN_ADDRESSES[token], addresses, amounts, totalAmount];
+    const result = await cdpClient.evm.sendTransaction({
+      address: senderAccount.address as `0x${string}`,
+      transaction: {
+        to: contractAddress as `0x${string}`,
+        data: encodeFunctionData({
+          abi: GasliteDrop,
+          functionName,
+          args,
+        }),
+        value: token === 'eth' ? BigInt(totalAmount) : BigInt(0),
+        type: 'eip1559',
+      },
+      network: 'base-sepolia',
+      idempotencyKey: randomUUID(),
+    });
 
-        const result = await cdpClient.evm.sendTransaction({
-          address: senderAccount.address as `0x${string}`,
-          transaction: {
-            to: contractAddress as `0x${string}`,
-            data: encodeFunctionData({
-              abi: GasliteDrop,
-              functionName,
-              args,
-            }),
-            value: token === 'eth' ? BigInt(totalAmount) : BigInt(0),
-            type: 'eip1559',
-          },
-          network: 'base-sepolia',
-          idempotencyKey: randomUUID(),
-        });
+    const transactionHash = result.transactionHash;
 
-        transactionHash = result.transactionHash;
-        
-        // Wait for transaction confirmation
-        await publicClient.waitForTransactionReceipt({
-          hash: transactionHash as `0x${string}`,
-        });
-        
-        break; // Success, exit retry loop
-      } catch (error) {
-        lastError = error as Error;
-        if (error instanceof Error && error.message.includes('replacement transaction underpriced')) {
-          retryCount++;
-          if (retryCount < MAX_RETRIES) {
-            console.log(`Retrying with increased gas price (attempt ${retryCount + 1}/${MAX_RETRIES})`);
-            continue;
-          }
-        }
-        throw error; // Re-throw if it's not a gas price error or we've exhausted retries
-      }
-    }
+    await publicClient.waitForTransactionReceipt({
+      hash: transactionHash as `0x${string}`,
+    });
 
-    if (!transactionHash) {
-      throw lastError || new Error('Failed to execute transfer after retries');
-    }
 
     return {
       success: true,

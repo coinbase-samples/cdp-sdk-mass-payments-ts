@@ -39,7 +39,6 @@ export async function POST(
   try {
     const { recipients, token }: TransferRequest = await request.json();
 
-    // Validate input
     if (!recipients || !token) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -54,7 +53,6 @@ export async function POST(
       );
     }
 
-    // Validate recipient IDs are valid email addresses
     const invalidEmails = recipients
       .map((recipient, index) => ({ email: recipient.recipientId, index }))
       .filter(({ email }) => !EMAIL_REGEX.test(email));
@@ -68,7 +66,6 @@ export async function POST(
 
     const account = await getEvmAccountFromId(session!.user.id)
 
-    // Extract recipientIds and amounts
     const recipientIds = recipients.map(r => r.recipientId);
 
     const decimalPrecision = tokenDecimals[token as TokenKey];
@@ -90,7 +87,6 @@ export async function POST(
         throw new Error(`Unknown token symbol: ${token}`);
       }
 
-      // Check ERC20 token balance
       const tokenBalance = await publicClient.readContract({
         abi: erc20Abi,
         address: tokenAddress,
@@ -105,18 +101,15 @@ export async function POST(
       }
     }
 
-    // Get recipient EVM accounts, creating users and wallets if they don't exist
     const recipientAccounts = await Promise.all(
       recipientIds.map(async (recipientId: string) => {
         const sha256Email = hashEmail(recipientId);
         let user = await getUserByEmailHash(sha256Email);
 
         if (!user) {
-          // Create user if they don't exist
           user = await createUser(sha256Email, '');
         }
 
-        // This will create a wallet if it doesn't exist
         return await getOrCreateEvmAccountFromId({ accountId: user.userId });
       })
     );
@@ -133,7 +126,6 @@ export async function POST(
       });
     }
 
-    // Create transaction
     const result = await executeTransfers({
       senderAccount: account,
       token: sanitizedToken as TokenKey,
