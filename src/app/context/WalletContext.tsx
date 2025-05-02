@@ -16,8 +16,9 @@
 
 'use client'
 
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
+import { TokenKey } from '@/lib/constant'
 
 type WalletContextType = {
   evmAddress?: string
@@ -27,8 +28,6 @@ type WalletContextType = {
   setActiveToken: (token: TokenKey) => void
   refreshBalance: (token?: TokenKey) => void
 }
-
-type TokenKey = 'eth' | 'usdc' | 'eurc' | 'cbbtc'
 
 const WalletContext = createContext<WalletContextType>({
   refreshBalance: () => { },
@@ -55,7 +54,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
-  const refreshBalance = async (token: TokenKey = activeToken) => {
+  const refreshBalance = useCallback(async (token: TokenKey = activeToken) => {
     if (!evmAddress) return
 
     const query = token !== 'eth' ? `?token=${token}` : ''
@@ -64,7 +63,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       const { balance } = await res.json()
       setBalances(prev => ({ ...prev, [token]: balance }))
     }
-  }
+  }, [evmAddress, activeToken])
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -76,7 +75,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     if (evmAddress) {
       refreshBalance('eth')
     }
-  }, [evmAddress])
+  }, [evmAddress, refreshBalance])
 
   return (
     <WalletContext.Provider

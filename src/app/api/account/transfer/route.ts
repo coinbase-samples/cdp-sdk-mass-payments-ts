@@ -134,7 +134,7 @@ export async function POST(
       totalAmount: totalTransferAmount,
     });
 
-    return NextResponse.json({ recipients, ...result });
+    return NextResponse.json({ recipients, result });
   } catch (error) {
     console.error('Transfer error:', error);
     return NextResponse.json(
