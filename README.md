@@ -33,7 +33,7 @@ Special thanks to [HeimLabs](https://www.heimlabs.com/) for foundational work on
 This application uses the Gaslite Drop smart contract for the batch transfers.
 The .env.example file contains the contract address for the Gaslite Drop contract
 deployed on the Base Sepolia testnet. If you want to deploy your own contract,
-you can clone the [Gaselite Core](https://github.com/PopPunkLLC/gaslite-core),
+you can clone the [Gaslite Core](https://github.com/PopPunkLLC/gaslite-core),
 and deploy by calling:
 
 ```sh
