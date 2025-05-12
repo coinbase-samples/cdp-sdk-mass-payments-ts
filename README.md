@@ -5,7 +5,7 @@
 ![Tailwind](https://img.shields.io/badge/-SCSS-cd6799?style=for-the-badge&logo=SASS&logoColor=white)
 ![Coinbase](https://img.shields.io/badge/Coinbase-0052FF?style=for-the-badge&logo=Coinbase&logoColor=white)
 
-A demo application of developer-custodied server wallet payments tool using the new [Coinbase Developer Platform SDK Wallet API](https://docs.cdp.coinbase.com/wallet-api-v2/docs/welcome). Users can sign in with their email (currently powered by Google or Github) and send funds to other emails. All emails are backed by Coinbase Server Wallets running on Base Sepolia.
+A demo application of developer-custodied server wallet payments tool using the new [CDP Wallet API v2](https://docs.cdp.coinbase.com/wallet-api-v2/docs/welcome). Users can sign in with their email (currently powered by Google or Github) and send funds to other emails. All emails are backed by Coinbase Server Wallets running on Base Sepolia.
 
 ## License
 
@@ -28,12 +28,12 @@ Special thanks to [HeimLabs](https://www.heimlabs.com/) for foundational work on
 
 ## Getting Started
 
-0. Deploy the Drop Contract
+0. \[Optional\] Deploy the Drop Contract
 
 This application uses the Gaslite Drop smart contract for the batch transfers.
 The .env.example file contains the contract address for the Gaslite Drop contract
 deployed on the Base Sepolia testnet. If you want to deploy your own contract,
-you can clone the [Gaselite Core](https://github.com/PopPunkLLC/gaslite-core),
+you can clone the [Gaslite Core](https://github.com/PopPunkLLC/gaslite-core),
 and deploy by calling:
 
 ```sh
