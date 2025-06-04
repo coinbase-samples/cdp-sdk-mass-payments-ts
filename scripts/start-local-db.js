@@ -45,14 +45,6 @@ async function createTable(sql) {
     );
   `;
   console.log('user_details table created.');
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS wallet_addresses (
-      user_id UUID PRIMARY KEY REFERENCES user_details(user_id),
-      address TEXT NOT NULL
-    );
-  `;
-  console.log('wallet_addresses table created.');
 }
 
 (async () => {
@@ -70,7 +62,7 @@ async function createTable(sql) {
     console.log('Waiting for DB to be ready...');
     await waitForDbReady(sql);
 
-    console.log('Creating wallet_addresses table...');
+    console.log('Creating table...');
     await createTable(sql);
 
     console.log('Setup complete.');
