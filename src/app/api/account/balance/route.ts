@@ -15,7 +15,7 @@
  */
 
 import { getBalanceForAddress } from '@/lib/balance';
-import { getEvmAccountFromId } from '@/lib/cdp';
+import { cdpClient } from '@/lib/cdp';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
@@ -25,7 +25,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions)
 
-  const account = await getEvmAccountFromId(session!.user.id)
+  const account = await cdpClient.evm.getAccount({ name: session!.user.id })
 
   const token = req.nextUrl.searchParams.get('token');
 
