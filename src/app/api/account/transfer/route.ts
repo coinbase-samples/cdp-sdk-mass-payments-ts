@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { getEvmAccountFromId, getOrCreateEvmAccountFromId } from "@/lib/cdp";
+import { cdpClient } from "@/lib/cdp";
 import { NextRequest, NextResponse } from "next/server";
-import { getWalletClient, publicClient } from "@/lib/viem";
-import { Address, erc20Abi, formatUnits, parseUnits } from "viem";
+import { Address, formatUnits, parseUnits } from "viem";
 import { executeTransfers } from "@/lib/transfer";
 import { erc20approveAbi, TOKEN_ADDRESSES, tokenDecimals, TokenKey } from "@/lib/constant";
 import { TransferRequest } from "@/lib/types/transfer";
@@ -26,6 +25,9 @@ import { InsufficientBalanceError } from "@/lib/errors";
 import { getUserByEmailHash, hashEmail, createUser } from "@/lib/db/user";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { encodeFunctionData } from "viem";
+import { randomUUID } from "crypto";
+import { publicClient } from "@/lib/viem";
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -64,7 +66,7 @@ export async function POST(
       );
     }
 
-    const account = await getEvmAccountFromId(session!.user.id)
+    const account = await cdpClient.evm.getAccount({ name: session!.user.id })
 
     const recipientIds = recipients.map(r => r.recipientId);
 
@@ -74,9 +76,18 @@ export async function POST(
 
     const sanitizedToken = token.toLowerCase();
 
+    const balancesResponse = await cdpClient.evm.listTokenBalances({
+      address: account.address as `0x${string}`,
+      network: 'base-sepolia',
+    });
+
     if (token === 'eth') {
-      const ethBalance = await publicClient.getBalance({ address: account.address });
-      if (ethBalance < totalTransferAmount) {
+      const ethBalance = balancesResponse.balances.find(b => b.token.symbol === 'ETH');
+      if (!ethBalance) {
+        throw new Error('ETH balance not found');
+      }
+
+      if (BigInt(ethBalance.amount.amount) < totalTransferAmount) {
         throw new InsufficientBalanceError(
           `Insufficient ETH balance for transfer. Required: ${formatUnits(totalTransferAmount, 18)} ETH`
         );
@@ -87,14 +98,13 @@ export async function POST(
         throw new Error(`Unknown token symbol: ${token}`);
       }
 
-      const tokenBalance = await publicClient.readContract({
-        abi: erc20Abi,
-        address: tokenAddress,
-        functionName: 'balanceOf',
-        args: [account.address],
-      });
+      const tokenBalance = balancesResponse.balances.find(b => b.token.symbol === token.toUpperCase());
 
-      if (tokenBalance < totalTransferAmount) {
+      if (!tokenBalance) {
+        throw new Error(`Token ${token} not found in balances`);
+      }
+
+      if (BigInt(tokenBalance.amount.amount) < totalTransferAmount) {
         throw new InsufficientBalanceError(
           `Insufficient ${token.toUpperCase()} balance. Required: ${formatUnits(totalTransferAmount, decimalPrecision)} ${token.toUpperCase()}`
         );
@@ -110,19 +120,31 @@ export async function POST(
           user = await createUser(sha256Email, '');
         }
 
-        return await getOrCreateEvmAccountFromId({ accountId: user.userId });
+        return await cdpClient.evm.getOrCreateAccount({ name: user.userId });
       })
     );
     const recipientAddresses = recipientAccounts.map(account => account.address as Address);
 
     if (token !== 'eth') {
       const tokenAddress = TOKEN_ADDRESSES[token as TokenKey];
-      const walletClient = await getWalletClient(account);
-      await walletClient.writeContract({
-        abi: erc20approveAbi,
-        address: tokenAddress as Address,
-        functionName: 'approve',
-        args: [config.GASLITE_DROP_ADDRESS as Address, totalTransferAmount],
+      const result = await cdpClient.evm.sendTransaction({
+        address: account.address as `0x${string}`,
+        transaction: {
+          to: tokenAddress as `0x${string}`,
+          data: encodeFunctionData({
+            abi: erc20approveAbi,
+            functionName: 'approve',
+            args: [config.GASLITE_DROP_ADDRESS as Address, totalTransferAmount],
+          }),
+          value: BigInt(0),
+          type: 'eip1559',
+        },
+        network: 'base-sepolia',
+        idempotencyKey: randomUUID(),
+      });
+
+      await publicClient.waitForTransactionReceipt({
+        hash: result.transactionHash as `0x${string}`,
       });
     }
 
