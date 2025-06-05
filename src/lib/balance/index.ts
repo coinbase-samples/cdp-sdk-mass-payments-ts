@@ -14,17 +14,27 @@
  * limitations under the License.
  */
 
-import { Address, erc20Abi, formatUnits } from "viem";
-import { publicClient } from "@/lib/viem";
+import { Address, formatUnits } from "viem";
 import { TOKEN_ADDRESSES, TokenKey } from "@/lib/constant";
+import { cdpClient } from "@/lib/cdp";
+import { bigintToNumberSafe } from "@/lib/utils";
 
 export const getBalanceForAddress = async (
   address: `0x${string}`,
   tokenSymbol?: string,
 ): Promise<string> => {
+  const balances = await cdpClient.evm.listTokenBalances({
+    address,
+    network: 'base-sepolia',
+  });
+
   if (!tokenSymbol) {
-    const balance = await publicClient.getBalance({ address });
-    return formatUnits(balance, 18); // ETH is always 18 decimals
+    const ethBalance = balances.balances.find(b => b.token.symbol === 'ETH');
+    if (!ethBalance) {
+      throw new Error('ETH balance not found');
+    }
+
+    return formatUnits(ethBalance.amount.amount, bigintToNumberSafe(ethBalance.amount.decimals))
   }
 
   const tokenAddress: Address = TOKEN_ADDRESSES[tokenSymbol as TokenKey];
@@ -32,19 +42,9 @@ export const getBalanceForAddress = async (
     throw new Error(`Unknown token symbol: ${tokenSymbol}`);
   }
 
-  const [decimals, rawBalance] = await Promise.all([
-    publicClient.readContract({
-      abi: erc20Abi,
-      address: tokenAddress,
-      functionName: 'decimals',
-    }),
-    publicClient.readContract({
-      abi: erc20Abi,
-      address: tokenAddress,
-      functionName: 'balanceOf',
-      args: [address],
-    }),
-  ]);
-
-  return formatUnits(rawBalance as bigint, decimals as number);
+  const tokenBalance = balances.balances.find(b => b.token?.symbol?.toLowerCase() === tokenSymbol.toLowerCase());
+  if (!tokenBalance) {
+    throw new Error(`${tokenSymbol} balance not found`);
+  }
+  return formatUnits(tokenBalance.amount.amount, bigintToNumberSafe(tokenBalance.amount.decimals));
 }
