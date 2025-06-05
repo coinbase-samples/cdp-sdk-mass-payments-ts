@@ -28,6 +28,7 @@ import { authOptions } from "@/lib/auth";
 import { encodeFunctionData } from "viem";
 import { randomUUID } from "crypto";
 import { publicClient } from "@/lib/viem";
+import { getBalanceForAddress } from "@/lib/balance";
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -76,39 +77,11 @@ export async function POST(
 
     const sanitizedToken = token.toLowerCase();
 
-    const balancesResponse = await cdpClient.evm.listTokenBalances({
-      address: account.address as `0x${string}`,
-      network: 'base-sepolia',
-    });
-
-    if (token === 'eth') {
-      const ethBalance = balancesResponse.balances.find(b => b.token.symbol === 'ETH');
-      if (!ethBalance) {
-        throw new Error('ETH balance not found');
-      }
-
-      if (BigInt(ethBalance.amount.amount) < totalTransferAmount) {
-        throw new InsufficientBalanceError(
-          `Insufficient ETH balance for transfer. Required: ${formatUnits(totalTransferAmount, 18)} ETH`
-        );
-      }
-    } else {
-      const tokenAddress = TOKEN_ADDRESSES[token as TokenKey];
-      if (!tokenAddress) {
-        throw new Error(`Unknown token symbol: ${token}`);
-      }
-
-      const tokenBalance = balancesResponse.balances.find(b => b.token.symbol === token.toUpperCase());
-
-      if (!tokenBalance) {
-        throw new Error(`Token ${token} not found in balances`);
-      }
-
-      if (BigInt(tokenBalance.amount.amount) < totalTransferAmount) {
-        throw new InsufficientBalanceError(
-          `Insufficient ${token.toUpperCase()} balance. Required: ${formatUnits(totalTransferAmount, decimalPrecision)} ${token.toUpperCase()}`
-        );
-      }
+    const tokenBalance = await getBalanceForAddress(account.address, sanitizedToken);
+    if (BigInt(tokenBalance) < totalTransferAmount) {
+      throw new InsufficientBalanceError(
+        `Insufficient ${sanitizedToken} balance for transfer. Required: ${formatUnits(totalTransferAmount, 18)} ETH`
+      );
     }
 
     const recipientAccounts = await Promise.all(

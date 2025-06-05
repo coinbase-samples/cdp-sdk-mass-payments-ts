@@ -29,12 +29,7 @@ export const getBalanceForAddress = async (
   });
 
   if (!tokenSymbol) {
-    const ethBalance = balances.balances.find(b => b.token.symbol === 'ETH');
-    if (!ethBalance) {
-      throw new Error('ETH balance not found');
-    }
-
-    return formatUnits(ethBalance.amount.amount, bigintToNumberSafe(ethBalance.amount.decimals))
+    throw new Error('Token symbol is required');
   }
 
   const tokenAddress: Address = TOKEN_ADDRESSES[tokenSymbol as TokenKey];
@@ -42,9 +37,10 @@ export const getBalanceForAddress = async (
     throw new Error(`Unknown token symbol: ${tokenSymbol}`);
   }
 
-  const tokenBalance = balances.balances.find(b => b.token?.symbol?.toLowerCase() === tokenSymbol.toLowerCase());
+  const tokenBalance = balances.balances.find(b => b.token?.contractAddress === tokenAddress);
   if (!tokenBalance) {
-    throw new Error(`${tokenSymbol} balance not found`);
+    console.log('tokenBalance not found', tokenSymbol)
+    return '0';
   }
   return formatUnits(tokenBalance.amount.amount, bigintToNumberSafe(tokenBalance.amount.decimals));
 }

@@ -30,11 +30,10 @@ export async function GET(
   const token = req.nextUrl.searchParams.get('token');
 
   try {
-    const balance = await getBalanceForAddress(account.address, token || undefined);
+    const balance = await getBalanceForAddress(account.address, token || 'eth');
     return NextResponse.json({ balance });
   } catch (error) {
     console.error('Error fetching balance:', error);
     return NextResponse.json({ error: 'Failed to fetch balance' }, { status: 500 });
   }
 }
-

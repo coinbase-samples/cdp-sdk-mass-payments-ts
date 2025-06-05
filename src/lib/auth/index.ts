@@ -20,6 +20,12 @@ import GithubProvider from "next-auth/providers/github"
 import { config } from "@/lib/config"
 import { createUser, getUserByEmailHash, addPartnerId, hashEmail, createPartnerId } from "@/lib/db/user"
 
+declare module "next-auth/jwt" {
+  interface JWT {
+    userId?: string;
+  }
+}
+
 const providers = [];
 if (config.GOOGLE_CLIENT_ID) providers.push(
   GoogleProvider({
@@ -74,12 +80,8 @@ export const authOptions: AuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session.user && token.email) {
-        const sha256Email = hashEmail(token.email);
-        const user = await getUserByEmailHash(sha256Email);
-        if (user) {
-          session.user.id = user.userId;
-        }
+      if (session.user && token.userId) {
+        session.user.id = token.userId;
       }
       return session;
     }
