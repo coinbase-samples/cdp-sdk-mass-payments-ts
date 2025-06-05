@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Address, parseAbi, zeroAddress } from "viem";
+import { Address, parseAbi } from "viem";
 
 export const TOKEN_ADDRESSES: Record<TokenKey, Address> = {
   eth: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
