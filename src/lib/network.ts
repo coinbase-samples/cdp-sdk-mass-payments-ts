@@ -29,4 +29,4 @@ const baseNetworkConfig: NetworkConfig = {
   rpcUrl: config.BASE_MAINNET_NODE_URL,
   network: 'base',
   explorerUrl: 'https://basescan.org',
-}
+};

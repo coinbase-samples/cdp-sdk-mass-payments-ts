@@ -20,33 +20,39 @@ import { isTokenKey } from '@/lib/constants';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-export async function GET(
-  req: NextRequest,
-) {
-  const session = await getServerSession(authOptions)
+export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions);
 
-  const account = await cdpClient.evm.getAccount({ name: session!.user.id })
+  const account = await cdpClient.evm.getAccount({ name: session!.user.id });
 
   const token = req.nextUrl.searchParams.get('token');
 
   if (!token) {
-    return NextResponse.json({ error: 'Token parameter is required' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Token parameter is required' },
+      { status: 400 }
+    );
   }
 
   if (!isTokenKey(token)) {
-    return NextResponse.json({ error: 'Invalid token parameter' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Invalid token parameter' },
+      { status: 400 }
+    );
   }
 
   try {
     await requestFaucetFunds({
       address: account.address,
-      tokenName: token
+      tokenName: token,
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error requesting faucet:", error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    console.error('Error requesting faucet:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }
-

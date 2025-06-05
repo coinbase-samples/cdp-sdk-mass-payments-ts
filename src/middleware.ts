@@ -14,32 +14,27 @@
  * limitations under the License.
  */
 
-import { NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'
-import { NextRequestWithAuth, withAuth } from 'next-auth/middleware'
+import { NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
+import { NextRequestWithAuth, withAuth } from 'next-auth/middleware';
 
 export default withAuth(
   async function middleware(req: NextRequestWithAuth) {
-    const token = await getToken({ req })
+    const token = await getToken({ req });
 
     if (!token?.sub) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    return NextResponse.next()
+    return NextResponse.next();
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token
-    }
+      authorized: ({ token }) => !!token,
+    },
   }
-)
+);
 
 export const config = {
-  matcher: [
-    '/api/account/:path*',
-  ]
-} 
+  matcher: ['/api/account/:path*'],
+};

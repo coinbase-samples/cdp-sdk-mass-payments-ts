@@ -1,4 +1,4 @@
-import { Chain } from "viem";
+import { Chain } from 'viem';
 
 export type NetworkConfig = {
   chain: Chain;

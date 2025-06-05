@@ -19,7 +19,8 @@ import { config } from '@/lib/config';
 
 if (config.NODE_ENV === 'development') {
   neonConfig.fetchEndpoint = (host) => {
-    const [protocol, port] = host === 'db.localtest.me' ? ['http', 4444] : ['https', 443];
+    const [protocol, port] =
+      host === 'db.localtest.me' ? ['http', 4444] : ['https', 443];
     return `${protocol}://${host}:${port}/sql`;
   };
 }

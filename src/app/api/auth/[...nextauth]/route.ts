@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import { authOptions } from "@/lib/auth";
-import NextAuth, { DefaultSession } from "next-auth"
+import { authOptions } from '@/lib/auth';
+import NextAuth, { DefaultSession } from 'next-auth';
 
-declare module "next-auth" {
+declare module 'next-auth' {
   interface Session extends DefaultSession {
     user: {
       id: string;
-    } & DefaultSession["user"]
+    } & DefaultSession['user'];
   }
 }
 
-const handler = NextAuth(authOptions)
+const handler = NextAuth(authOptions);
 
-export { handler as GET, handler as POST }
+export { handler as GET, handler as POST };

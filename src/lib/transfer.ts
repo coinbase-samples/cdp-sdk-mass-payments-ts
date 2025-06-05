@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import { CdpClient } from "@coinbase/cdp-sdk";
-import { TransferParams, TransferResult } from "@/lib/types/transfer";
-import { TOKEN_ADDRESSES, TokenKey } from "@/lib/constants";
-import { config } from "./config";
-import GasliteDrop from "@/contracts/GasliteDrop.json";
-import { encodeFunctionData } from "viem";
+import { CdpClient } from '@coinbase/cdp-sdk';
+import { TransferParams, TransferResult } from '@/lib/types/transfer';
+import { TOKEN_ADDRESSES, TokenKey } from '@/lib/constants';
+import { config } from './config';
+import GasliteDrop from '@/contracts/GasliteDrop.json';
+import { encodeFunctionData } from 'viem';
 import { randomUUID } from 'crypto';
-import { publicClient } from "@/lib/viem";
-import { getNetworkConfig } from "@/lib/network";
+import { publicClient } from '@/lib/viem';
+import { getNetworkConfig } from '@/lib/network';
 
 const { network } = getNetworkConfig();
 
@@ -32,17 +32,27 @@ const cdpClient = new CdpClient({
   walletSecret: config.CDP_WALLET_SECRET,
 });
 
-export async function executeTransfers(params: TransferParams): Promise<TransferResult> {
+export async function executeTransfers(
+  params: TransferParams
+): Promise<TransferResult> {
   const { senderAccount, token, addresses, amounts, totalAmount } = params;
 
-  console.log('Executing batch transfer:', senderAccount.address, token, addresses, amounts, totalAmount);
+  console.log(
+    'Executing batch transfer:',
+    senderAccount.address,
+    token,
+    addresses,
+    amounts,
+    totalAmount
+  );
 
   try {
     const contractAddress = config.GASLITE_DROP_ADDRESS;
     const functionName = token === 'eth' ? 'airdropETH' : 'airdropERC20';
-    const args = token === 'eth'
-      ? [addresses, amounts]
-      : [TOKEN_ADDRESSES[token as TokenKey], addresses, amounts, totalAmount];
+    const args =
+      token === 'eth'
+        ? [addresses, amounts]
+        : [TOKEN_ADDRESSES[token as TokenKey], addresses, amounts, totalAmount];
 
     const result = await cdpClient.evm.sendTransaction({
       address: senderAccount.address as `0x${string}`,
@@ -66,11 +76,10 @@ export async function executeTransfers(params: TransferParams): Promise<Transfer
       hash: transactionHash as `0x${string}`,
     });
 
-
     return {
       success: true,
       hash: transactionHash,
-    }
+    };
   } catch (error) {
     console.error('Error executing batch transfer:', error);
     return {
