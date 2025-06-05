@@ -29,6 +29,9 @@ import { encodeFunctionData } from "viem";
 import { randomUUID } from "crypto";
 import { publicClient } from "@/lib/viem";
 import { getBalanceForAddress } from "@/lib/balance";
+import { getNetworkConfig } from "@/lib/network";
+
+const { network } = getNetworkConfig();
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -113,7 +116,7 @@ export async function POST(
           value: BigInt(0),
           type: 'eip1559',
         },
-        network: 'base-sepolia',
+        network,
         idempotencyKey: randomUUID(),
       });
 

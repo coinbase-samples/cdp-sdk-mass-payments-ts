@@ -22,6 +22,9 @@ import GasliteDrop from "@/contracts/GasliteDrop.json";
 import { encodeFunctionData } from "viem";
 import { randomUUID } from 'crypto';
 import { publicClient } from "@/lib/viem";
+import { getNetworkConfig } from "@/lib/network";
+
+const { network } = getNetworkConfig();
 
 const cdpClient = new CdpClient({
   apiKeyId: config.CDP_API_KEY_ID,
@@ -53,7 +56,7 @@ export async function executeTransfers(params: TransferParams): Promise<Transfer
         value: token === 'eth' ? BigInt(totalAmount) : BigInt(0),
         type: 'eip1559',
       },
-      network: 'base-sepolia',
+      network,
       idempotencyKey: randomUUID(),
     });
 

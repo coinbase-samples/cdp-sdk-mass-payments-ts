@@ -17,16 +17,16 @@ export const getNetworkConfig = (): NetworkConfig => {
   return baseSepoliaNetworkConfig;
 };
 
-const baseSepoliaNetworkConfig = {
+const baseSepoliaNetworkConfig: NetworkConfig = {
   chain: baseSepolia,
   rpcUrl: config.BASE_SEPOLIA_NODE_URL,
-  network: baseSepolia.name,
+  network: 'base-sepolia',
   explorerUrl: 'https://sepolia.basescan.org',
 };
 
-const baseNetworkConfig = {
+const baseNetworkConfig: NetworkConfig = {
   chain: base,
   rpcUrl: config.BASE_MAINNET_NODE_URL,
-  network: base.name,
+  network: 'base',
   explorerUrl: 'https://basescan.org',
 }
