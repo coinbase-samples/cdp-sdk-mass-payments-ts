@@ -14,36 +14,44 @@
  * limitations under the License.
  */
 
-import { AuthOptions, SessionStrategy } from "next-auth";
-import GoogleProvider from "next-auth/providers/google"
-import GithubProvider from "next-auth/providers/github"
-import { config } from "@/lib/config"
-import { createUser, getUserByEmailHash, addPartnerId, hashEmail, createPartnerId } from "@/lib/db/user"
+import { AuthOptions, SessionStrategy } from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
+import GithubProvider from 'next-auth/providers/github';
+import { config } from '@/lib/config';
+import {
+  createUser,
+  getUserByEmailHash,
+  addPartnerId,
+  hashEmail,
+  createPartnerId,
+} from '@/lib/db/user';
 
-declare module "next-auth/jwt" {
+declare module 'next-auth/jwt' {
   interface JWT {
     userId?: string;
   }
 }
 
 const providers = [];
-if (config.GOOGLE_CLIENT_ID) providers.push(
-  GoogleProvider({
-    clientId: config.GOOGLE_CLIENT_ID!,
-    clientSecret: config.GOOGLE_CLIENT_SECRET!,
-  })
-)
-if (config.GITHUB_CLIENT_ID) providers.push(
-  GithubProvider({
-    clientId: config.GITHUB_CLIENT_ID!,
-    clientSecret: config.GITHUB_CLIENT_SECRET!,
-  })
-)
+if (config.GOOGLE_CLIENT_ID)
+  providers.push(
+    GoogleProvider({
+      clientId: config.GOOGLE_CLIENT_ID!,
+      clientSecret: config.GOOGLE_CLIENT_SECRET!,
+    })
+  );
+if (config.GITHUB_CLIENT_ID)
+  providers.push(
+    GithubProvider({
+      clientId: config.GITHUB_CLIENT_ID!,
+      clientSecret: config.GITHUB_CLIENT_SECRET!,
+    })
+  );
 
 export const authOptions: AuthOptions = {
   providers,
   session: {
-    strategy: "jwt" as SessionStrategy,
+    strategy: 'jwt' as SessionStrategy,
   },
   secret: config.NEXTAUTH_SECRET,
   callbacks: {
@@ -51,7 +59,10 @@ export const authOptions: AuthOptions = {
       if (!user.email || !account) return false;
 
       const sha256Email = hashEmail(user.email);
-      const partnerId = createPartnerId(account.provider, account.providerAccountId);
+      const partnerId = createPartnerId(
+        account.provider,
+        account.providerAccountId
+      );
 
       let userDetails = await getUserByEmailHash(sha256Email);
       if (userDetails) {
@@ -63,7 +74,7 @@ export const authOptions: AuthOptions = {
       }
 
       if (userDetails === null) {
-        throw new Error("failed to retrieve user with partnerId")
+        throw new Error('failed to retrieve user with partnerId');
       }
 
       return true;
@@ -84,6 +95,6 @@ export const authOptions: AuthOptions = {
         session.user.id = token.userId;
       }
       return session;
-    }
+    },
   },
-}
+};

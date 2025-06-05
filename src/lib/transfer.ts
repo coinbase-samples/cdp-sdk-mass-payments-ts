@@ -16,7 +16,7 @@
 
 import { CdpClient } from "@coinbase/cdp-sdk";
 import { TransferParams, TransferResult } from "@/lib/types/transfer";
-import { TOKEN_ADDRESSES } from "@/lib/constant";
+import { TOKEN_ADDRESSES, TokenKey } from "@/lib/constants";
 import { config } from "./config";
 import GasliteDrop from "@/contracts/GasliteDrop.json";
 import { encodeFunctionData } from "viem";
@@ -39,7 +39,7 @@ export async function executeTransfers(params: TransferParams): Promise<Transfer
     const functionName = token === 'eth' ? 'airdropETH' : 'airdropERC20';
     const args = token === 'eth'
       ? [addresses, amounts]
-      : [TOKEN_ADDRESSES[token], addresses, amounts, totalAmount];
+      : [TOKEN_ADDRESSES[token as TokenKey], addresses, amounts, totalAmount];
 
     const result = await cdpClient.evm.sendTransaction({
       address: senderAccount.address as `0x${string}`,

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Address, parseAbi } from "viem";
+import { Address, parseAbi } from 'viem';
 
 export const TOKEN_ADDRESSES: Record<TokenKey, Address> = {
   eth: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
@@ -23,9 +23,9 @@ export const TOKEN_ADDRESSES: Record<TokenKey, Address> = {
   cbbtc: '0xcbB7C0006F23900c38EB856149F799620fcb8A4a',
 };
 
-export type TokenKey = 'eth' | 'usdc' | 'eurc' | 'cbbtc'
+export type TokenKey = 'eth' | 'usdc' | 'eurc' | 'cbbtc';
 
-export const validTokens: TokenKey[] = ['eth', 'usdc', 'eurc', 'cbbtc']
+export const validTokens: TokenKey[] = ['eth', 'usdc', 'eurc', 'cbbtc'];
 
 export function isTokenKey(value: string): value is TokenKey {
   return validTokens.includes(value as TokenKey);
@@ -35,16 +35,16 @@ export const tokenDisplayMap: Record<TokenKey, string> = {
   eth: 'ETH',
   usdc: 'USDC',
   eurc: 'EURC',
-  cbbtc: 'cbBTC'
-}
+  cbbtc: 'cbBTC',
+};
 
 export const tokenDecimals: Record<TokenKey, number> = {
   eth: 18,
   usdc: 6,
   eurc: 6,
   cbbtc: 8,
-}
+};
 
 export const erc20approveAbi = parseAbi([
-  "function approve(address spender, uint256 amount) public",
+  'function approve(address spender, uint256 amount) public',
 ]);

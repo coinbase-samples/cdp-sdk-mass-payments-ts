@@ -18,7 +18,7 @@ import { cdpClient } from "@/lib/cdp";
 import { NextRequest, NextResponse } from "next/server";
 import { Address, formatUnits, parseUnits } from "viem";
 import { executeTransfers } from "@/lib/transfer";
-import { erc20approveAbi, TOKEN_ADDRESSES, tokenDecimals, TokenKey } from "@/lib/constant";
+import { erc20approveAbi, TOKEN_ADDRESSES, tokenDecimals, TokenKey } from "@/lib/constants";
 import { TransferRequest } from "@/lib/types/transfer";
 import { config } from "@/lib/config";
 import { InsufficientBalanceError } from "@/lib/errors";

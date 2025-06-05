@@ -15,7 +15,7 @@
  */
 
 import { useWallet } from '@/app/context/WalletContext'
-import { tokenDisplayMap, TokenKey } from '@/lib/constant'
+import { tokenDisplayMap, TokenKey } from '@/lib/constants'
 import { useState } from 'react'
 
 

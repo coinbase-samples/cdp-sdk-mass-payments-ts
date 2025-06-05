@@ -18,7 +18,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-import { TokenKey } from '@/lib/constant'
+import { TokenKey } from '@/lib/constants'
 
 type WalletContextType = {
   evmAddress?: string

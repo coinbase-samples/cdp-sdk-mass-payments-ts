@@ -42,7 +42,7 @@ const requiredEnvVars = [
   'GASLITE_DROP_ADDRESS',
 ] as const;
 
-type EnvVar = typeof requiredEnvVars[number];
+type EnvVar = (typeof requiredEnvVars)[number];
 
 type EnvConfig = {
   [K in EnvVar]: string;
@@ -68,11 +68,13 @@ const validateEnv = (): EnvConfig => {
   }
 
   if (missingVars.length > 0) {
-    throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+    throw new Error(
+      `Missing required environment variables: ${missingVars.join(', ')}`
+    );
   }
 
   validatedConfig = config as EnvConfig;
   return validatedConfig;
 };
 
-export const config = validateEnv(); 
+export const config = validateEnv();

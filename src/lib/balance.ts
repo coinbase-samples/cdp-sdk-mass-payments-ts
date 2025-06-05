@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import { Address, formatUnits } from "viem";
-import { TOKEN_ADDRESSES, TokenKey } from "@/lib/constant";
-import { cdpClient } from "@/lib/cdp";
-import { bigintToNumberSafe } from "@/lib/utils";
+import { Address, formatUnits } from 'viem';
+import { TOKEN_ADDRESSES, TokenKey } from '@/lib/constants';
+import { cdpClient } from '@/lib/cdp';
+import { bigintToNumberSafe } from '@/lib/utils';
 
 export const getBalanceForAddress = async (
   address: `0x${string}`,
-  tokenSymbol?: string,
+  tokenSymbol?: string
 ): Promise<string> => {
   const balances = await cdpClient.evm.listTokenBalances({
     address,
@@ -37,9 +37,14 @@ export const getBalanceForAddress = async (
     throw new Error(`Unknown token symbol: ${tokenSymbol}`);
   }
 
-  const tokenBalance = balances.balances.find(b => b.token?.contractAddress === tokenAddress);
+  const tokenBalance = balances.balances.find(
+    (b) => b.token?.contractAddress === tokenAddress
+  );
   if (!tokenBalance) {
     return '0';
   }
-  return formatUnits(tokenBalance.amount.amount, bigintToNumberSafe(tokenBalance.amount.decimals));
-}
+  return formatUnits(
+    tokenBalance.amount.amount,
+    bigintToNumberSafe(tokenBalance.amount.decimals)
+  );
+};
