@@ -35,6 +35,8 @@ const requiredEnvVars = [
 
   // RPC Endpoint
   'BASE_SEPOLIA_NODE_URL',
+  'BASE_MAINNET_NODE_URL',
+  'USE_MAINNET',
 
   // Contract Addresses
   'GASLITE_DROP_ADDRESS',

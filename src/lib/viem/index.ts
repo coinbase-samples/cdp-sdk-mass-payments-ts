@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { config } from "@/lib/config";
 import { createPublicClient, http } from "viem";
-import { baseSepolia } from "viem/chains";
+import { getNetworkConfig } from "@/lib/network";
 
+const { chain, rpcUrl } = getNetworkConfig();
 export const publicClient = createPublicClient({
-  chain: baseSepolia,
-  transport: http(config.BASE_SEPOLIA_NODE_URL),
+  chain,
+  transport: http(rpcUrl),
 });
