@@ -59,11 +59,35 @@ const validateEnv = (): EnvConfig => {
   const config: Partial<EnvConfig> = {};
 
   for (const envVar of requiredEnvVars) {
+    // Skip RPC URL validation here as we'll handle it separately
+    if (envVar === 'BASE_SEPOLIA_NODE_URL' || envVar === 'BASE_MAINNET_NODE_URL') {
+      continue;
+    }
+
     const value = process.env[envVar];
     if (!value) {
       missingVars.push(envVar);
     } else {
       config[envVar] = value;
+    }
+  }
+
+  // Handle RPC URL validation based on USE_MAINNET
+  const useMainnet = process.env.USE_MAINNET === 'true';
+  const mainnetUrl = process.env.BASE_MAINNET_NODE_URL;
+  const sepoliaUrl = process.env.BASE_SEPOLIA_NODE_URL;
+
+  if (useMainnet) {
+    if (!mainnetUrl) {
+      missingVars.push('BASE_MAINNET_NODE_URL');
+    } else {
+      config.BASE_MAINNET_NODE_URL = mainnetUrl;
+    }
+  } else {
+    if (!sepoliaUrl) {
+      missingVars.push('BASE_SEPOLIA_NODE_URL');
+    } else {
+      config.BASE_SEPOLIA_NODE_URL = sepoliaUrl;
     }
   }
 
