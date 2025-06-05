@@ -14,22 +14,11 @@
  * limitations under the License.
  */
 
-import { createPublicClient, http, createWalletClient } from "viem";
-import { baseSepolia } from "viem/chains";
 import { config } from "@/lib/config";
-import { EvmServerAccount } from "@coinbase/cdp-sdk";
-import { toAccount } from "viem/accounts";
+import { createPublicClient, http } from "viem";
+import { baseSepolia } from "viem/chains";
 
 export const publicClient = createPublicClient({
   chain: baseSepolia,
   transport: http(config.BASE_SEPOLIA_NODE_URL),
 });
-
-export async function getWalletClient(account: EvmServerAccount) {
-  console.log('ACCOUNT', account.address)
-  return createWalletClient({
-    account: toAccount(account),
-    chain: baseSepolia,
-    transport: http(config.BASE_SEPOLIA_NODE_URL),
-  });
-}

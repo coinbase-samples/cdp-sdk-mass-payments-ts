@@ -14,56 +14,17 @@
  * limitations under the License.
  */
 
-import { CdpClient, EvmServerAccount } from "@coinbase/cdp-sdk";
+import { CdpClient } from "@coinbase/cdp-sdk";
 import { config } from '@/lib/config';
-import { getWalletAddress, createWallet } from '@/lib/db/wallet';
-import { GetOrCreateEvmAccountParams, RequestFaucetParams } from "@/lib/types/cdp";
-import { publicClient } from "@/lib/viem";
+import { RequestFaucetParams } from "@/lib/types/cdp";
 import { baseSepolia } from "viem/chains";
-import { Address } from "viem";
+import { publicClient } from "@/lib/viem";
 
-const cdpClient: CdpClient = new CdpClient({
+export const cdpClient: CdpClient = new CdpClient({
   apiKeyId: config.CDP_API_KEY_ID,
   apiKeySecret: config.CDP_API_KEY_SECRET,
   walletSecret: config.CDP_WALLET_SECRET,
 });
-
-export async function getOrCreateEvmAccountFromId(params: GetOrCreateEvmAccountParams): Promise<EvmServerAccount> {
-  if (!config.DATABASE_URL) {
-    throw new Error("Database configuration is not properly set");
-  }
-
-  try {
-    const existingWallet = await getWalletAddress(params.accountId);
-    if (existingWallet) {
-      // Return the existing wallet
-      return await cdpClient.evm.getAccount({ address: existingWallet.address });
-    }
-
-    // Create new wallet only if user doesn't have one
-    const evmAccount = await cdpClient.evm.createAccount();
-    await createWallet(params.accountId, evmAccount.address);
-
-    return evmAccount;
-  } catch (error) {
-    console.error("Error creating wallet:", error);
-    throw error;
-  }
-}
-
-export async function getEvmAccountFromAddress(address: Address): Promise<EvmServerAccount> {
-  return await cdpClient.evm.getAccount({ address });
-}
-
-export async function getEvmAccountFromId(userId: string): Promise<EvmServerAccount> {
-  const walletRecord = await getWalletAddress(userId);
-
-  if (walletRecord === null) {
-    throw new Error("no address found associated with userId")
-  }
-
-  return cdpClient.evm.getAccount({ address: walletRecord.address })
-}
 
 export async function requestFaucetFunds(params: RequestFaucetParams) {
   const { transactionHash } = await cdpClient.evm.requestFaucet({

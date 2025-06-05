@@ -15,16 +15,16 @@
  */
 
 import { NextResponse } from "next/server";
-import { getOrCreateEvmAccountFromId } from "@/lib/cdp";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
+import { cdpClient } from "@/lib/cdp";
 
 export async function GET() {
   const session = await getServerSession(authOptions)
 
   try {
 
-    const account = await getOrCreateEvmAccountFromId({ accountId: session!.user.id })
+    const account = await cdpClient.evm.getOrCreateAccount({ name: session!.user.id })
 
     return NextResponse.json({ address: account.address })
   } catch (error) {

@@ -15,7 +15,7 @@
  */
 
 import { getBalanceForAddress } from '@/lib/balance';
-import { getEvmAccountFromId } from '@/lib/cdp';
+import { cdpClient } from '@/lib/cdp';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
@@ -25,16 +25,15 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions)
 
-  const account = await getEvmAccountFromId(session!.user.id)
+  const account = await cdpClient.evm.getAccount({ name: session!.user.id })
 
   const token = req.nextUrl.searchParams.get('token');
 
   try {
-    const balance = await getBalanceForAddress(account.address, token || undefined);
+    const balance = await getBalanceForAddress(account.address, token || 'eth');
     return NextResponse.json({ balance });
   } catch (error) {
     console.error('Error fetching balance:', error);
     return NextResponse.json({ error: 'Failed to fetch balance' }, { status: 500 });
   }
 }
-

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getEvmAccountFromId, requestFaucetFunds } from '@/lib/cdp';
+import { cdpClient, requestFaucetFunds } from '@/lib/cdp';
 import { NextRequest, NextResponse } from 'next/server';
 import { isTokenKey } from '@/lib/constant';
 import { getServerSession } from 'next-auth';
@@ -25,7 +25,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions)
 
-  const account = await getEvmAccountFromId(session!.user.id)
+  const account = await cdpClient.evm.getAccount({ name: session!.user.id })
 
   const token = req.nextUrl.searchParams.get('token');
 

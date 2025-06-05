@@ -14,25 +14,9 @@
  * limitations under the License.
  */
 
-import { sql } from "@/lib/db/neon";
-
-export async function getWalletAddress(userId: string) {
-  const result = await sql`
-    SELECT address 
-    FROM wallet_addresses 
-    WHERE user_id = ${userId}
-  `;
-
-  if (result.length > 0) {
-    return result[0];
-  }
-
-  return null;
+export function bigintToNumberSafe(value: bigint): number {
+    if (value > BigInt(Number.MAX_SAFE_INTEGER) || value < BigInt(Number.MIN_SAFE_INTEGER)) {
+        throw new Error("BigInt value is too large to convert safely to number.");
+    }
+    return Number(value);
 }
-
-export async function createWallet(userId: string, address: string) {
-  await sql`
-    INSERT INTO wallet_addresses (user_id, address)
-    VALUES (${userId}, ${address})
-  `;
-} 
