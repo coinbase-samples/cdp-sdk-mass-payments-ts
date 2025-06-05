@@ -39,7 +39,6 @@ export const getBalanceForAddress = async (
 
   const tokenBalance = balances.balances.find(b => b.token?.contractAddress === tokenAddress);
   if (!tokenBalance) {
-    console.log('tokenBalance not found', tokenSymbol)
     return '0';
   }
   return formatUnits(tokenBalance.amount.amount, bigintToNumberSafe(tokenBalance.amount.decimals));

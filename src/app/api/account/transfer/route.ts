@@ -78,9 +78,10 @@ export async function POST(
     const sanitizedToken = token.toLowerCase();
 
     const tokenBalance = await getBalanceForAddress(account.address, sanitizedToken);
-    if (BigInt(tokenBalance) < totalTransferAmount) {
+    const rawTokenBalance = parseUnits(tokenBalance, decimalPrecision);
+    if (rawTokenBalance < totalTransferAmount) {
       throw new InsufficientBalanceError(
-        `Insufficient ${sanitizedToken} balance for transfer. Required: ${formatUnits(totalTransferAmount, 18)} ETH`
+        `Insufficient ${sanitizedToken} balance for transfer. Required: ${formatUnits(totalTransferAmount, decimalPrecision)} ${sanitizedToken}`
       );
     }
 
