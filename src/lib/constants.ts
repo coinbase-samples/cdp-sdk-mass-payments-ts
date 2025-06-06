@@ -23,6 +23,13 @@ export const TOKEN_ADDRESSES: Record<TokenKey, Address> = {
   cbbtc: '0xcbB7C0006F23900c38EB856149F799620fcb8A4a',
 };
 
+export const TOKEN_ADDRESSES_MAINNET: Record<TokenKey, Address> = {
+  eth: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+  usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  eurc: '0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42',
+  cbbtc: '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf',
+};
+
 export type TokenKey = 'eth' | 'usdc' | 'eurc' | 'cbbtc';
 
 export const validTokens: TokenKey[] = ['eth', 'usdc', 'eurc', 'cbbtc'];
@@ -48,3 +55,9 @@ export const tokenDecimals: Record<TokenKey, number> = {
 export const erc20approveAbi = parseAbi([
   'function approve(address spender, uint256 amount) public',
 ]);
+
+export function getTokenAddresses(
+  isMainnet: boolean
+): Record<TokenKey, Address> {
+  return isMainnet ? TOKEN_ADDRESSES_MAINNET : TOKEN_ADDRESSES;
+}

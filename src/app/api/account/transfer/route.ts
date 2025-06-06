@@ -20,9 +20,9 @@ import { Address, formatUnits, parseUnits } from 'viem';
 import { executeTransfers } from '@/lib/transfer';
 import {
   erc20approveAbi,
-  TOKEN_ADDRESSES,
   tokenDecimals,
   TokenKey,
+  getTokenAddresses,
 } from '@/lib/constants';
 import { TransferRequest } from '@/lib/types/transfer';
 import { InsufficientBalanceError } from '@/lib/errors';
@@ -117,7 +117,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
 
     if (token !== 'eth') {
-      const tokenAddress = TOKEN_ADDRESSES[token as TokenKey];
+      const tokenAddress = getTokenAddresses(network === 'base')[
+        token as TokenKey
+      ];
       const result = await cdpClient.evm.sendTransaction({
         address: account.address as `0x${string}`,
         transaction: {
