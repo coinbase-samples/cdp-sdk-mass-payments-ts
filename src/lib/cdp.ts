@@ -15,15 +15,14 @@
  */
 
 import { CdpClient } from '@coinbase/cdp-sdk';
-import { config } from '@/lib/config';
 import { RequestFaucetParams } from '@/lib/types/cdp';
 import { baseSepolia } from 'viem/chains';
 import { publicClient } from '@/lib/viem';
 
 export const cdpClient: CdpClient = new CdpClient({
-  apiKeyId: config.CDP_API_KEY_ID,
-  apiKeySecret: config.CDP_API_KEY_SECRET,
-  walletSecret: config.CDP_WALLET_SECRET,
+  apiKeyId: process.env.CDP_API_KEY_ID,
+  apiKeySecret: process.env.CDP_API_KEY_SECRET,
+  walletSecret: process.env.CDP_WALLET_SECRET,
 });
 
 export async function requestFaucetFunds(params: RequestFaucetParams) {

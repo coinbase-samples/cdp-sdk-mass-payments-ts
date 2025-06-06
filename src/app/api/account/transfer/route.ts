@@ -25,7 +25,6 @@ import {
   TokenKey,
 } from '@/lib/constants';
 import { TransferRequest } from '@/lib/types/transfer';
-import { config } from '@/lib/config';
 import { InsufficientBalanceError } from '@/lib/errors';
 import { getUserByEmailHash, hashEmail, createUser } from '@/lib/db/user';
 import { getServerSession } from 'next-auth';
@@ -126,7 +125,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           data: encodeFunctionData({
             abi: erc20approveAbi,
             functionName: 'approve',
-            args: [config.GASLITE_DROP_ADDRESS as Address, totalTransferAmount],
+            args: [
+              process.env.GASLITE_DROP_ADDRESS as Address,
+              totalTransferAmount,
+            ],
           }),
           value: BigInt(0),
           type: 'eip1559',
