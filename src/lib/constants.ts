@@ -56,6 +56,8 @@ export const erc20approveAbi = parseAbi([
   'function approve(address spender, uint256 amount) public',
 ]);
 
-export function getTokenAddresses(isMainnet: boolean): Record<TokenKey, Address> {
+export function getTokenAddresses(
+  isMainnet: boolean
+): Record<TokenKey, Address> {
   return isMainnet ? TOKEN_ADDRESSES_MAINNET : TOKEN_ADDRESSES;
 }

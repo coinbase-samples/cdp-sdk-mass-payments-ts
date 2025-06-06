@@ -117,7 +117,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
 
     if (token !== 'eth') {
-      const tokenAddress = getTokenAddresses(network === 'base')[token as TokenKey];
+      const tokenAddress = getTokenAddresses(network === 'base')[
+        token as TokenKey
+      ];
       const result = await cdpClient.evm.sendTransaction({
         address: account.address as `0x${string}`,
         transaction: {

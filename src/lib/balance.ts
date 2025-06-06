@@ -35,7 +35,9 @@ export const getBalanceForAddress = async (
     throw new Error('Token symbol is required');
   }
 
-  const tokenAddress: Address = getTokenAddresses(network === 'base')[tokenSymbol as TokenKey];
+  const tokenAddress: Address = getTokenAddresses(network === 'base')[
+    tokenSymbol as TokenKey
+  ];
   if (!tokenAddress) {
     throw new Error(`Unknown token symbol: ${tokenSymbol}`);
   }
