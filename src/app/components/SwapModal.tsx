@@ -97,13 +97,26 @@ export const SwapModal = ({
           <div className="space-y-4 text-center">
             <div className="bg-green-50 rounded-lg p-4">
               <div className="text-green-600 mb-2">
-                <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg
+                  className="mx-auto h-12 w-12"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-green-800 mb-2">Swap Successful!</h3>
+              <h3 className="text-lg font-semibold text-green-800 mb-2">
+                Swap Successful!
+              </h3>
               <p className="text-sm text-gray-600 mb-3">
-                Successfully swapped {fromAmount} {tokenDisplayMap[fromToken]} to {tokenDisplayMap[toToken]}
+                Successfully swapped {fromAmount} {tokenDisplayMap[fromToken]}{' '}
+                to {tokenDisplayMap[toToken]}
               </p>
               <div className="text-xs text-gray-500">
                 <p className="mb-1">Transaction Hash:</p>

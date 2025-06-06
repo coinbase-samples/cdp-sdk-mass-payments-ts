@@ -18,7 +18,6 @@ import { useWallet } from '@/app/context/WalletContext';
 import { tokenDisplayMap, TokenKey } from '@/lib/constants';
 import { useState } from 'react';
 import { SwapModal } from './SwapModal';
-import { getNetworkConfig } from '@/lib/network';
 
 export const WalletInfo = () => {
   const { evmAddress, balances, activeToken, setActiveToken, refreshBalance } =
@@ -116,11 +115,11 @@ export const WalletInfo = () => {
         }),
       });
 
-            if (res.ok) {
+      if (res.ok) {
         const data = await res.json();
         setTransactionHash(data.transactionHash);
         setSwapSuccess(true);
-        
+
         refreshBalance('eth');
         refreshBalance(activeToken);
       } else {
@@ -135,14 +134,14 @@ export const WalletInfo = () => {
     }
   };
 
-    const closeSwapModal = () => {
+  const closeSwapModal = () => {
     if (!isExecutingSwap) {
       setIsSwapModalOpen(false);
       setSwapQuote(null);
       setSwapAmount('');
       setSwapSuccess(false);
       setTransactionHash('');
-      
+
       // Refresh balances when modal is closed
       refreshBalance('eth');
       refreshBalance(activeToken);
