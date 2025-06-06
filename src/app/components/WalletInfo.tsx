@@ -36,6 +36,16 @@ export const WalletInfo = () => {
     }
   };
 
+  const handleFundRequest = () => {
+    if (!evmAddress) return;
+    
+    const appId = process.env.NEXT_PUBLIC_COINBASE_ONRAMP_APP_ID || '';
+
+    const coinbasePayUrl = `https://pay.coinbase.com/buy/select-asset?appId=${appId}&addresses={"${evmAddress}":["base"]}&assets=["ETH"]&defaultPaymentMethod=CARD&fiatCurrency=USD&presetFiatAmount=5`;
+    
+    window.open(coinbasePayUrl, '_blank');
+  };
+
   return (
     <div className="w-full md:w-1/2 p-4">
       <h2 className="text-lg font-semibold mb-4">Wallet Information</h2>
@@ -66,7 +76,7 @@ export const WalletInfo = () => {
               ))}
             </select>
           </div>
-          {process.env.NEXT_PUBLIC_USE_MAINNET !== 'true' && (
+          {process.env.NEXT_PUBLIC_USE_MAINNET !== 'true' ? 
             <button
               onClick={handleFaucetRequest}
               disabled={isLoading}
@@ -100,9 +110,18 @@ export const WalletInfo = () => {
                 'Request Faucet'
               )}
             </button>
-          )}
+           : 
+            <button
+              onClick={handleFundRequest}
+              className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 w-fit hover:bg-blue-600 transition-colors"
+            >
+              Request Funds
+            </button>
+          } 
         </div>
       </div>
+
+
     </div>
   );
 };

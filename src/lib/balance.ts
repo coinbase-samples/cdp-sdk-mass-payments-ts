@@ -15,7 +15,7 @@
  */
 
 import { Address, formatUnits } from 'viem';
-import { TOKEN_ADDRESSES, TokenKey } from '@/lib/constants';
+import { getTokenAddresses, TokenKey } from '@/lib/constants';
 import { cdpClient } from '@/lib/cdp';
 import { bigintToNumberSafe } from '@/lib/utils';
 import { getNetworkConfig } from '@/lib/network';
@@ -35,7 +35,7 @@ export const getBalanceForAddress = async (
     throw new Error('Token symbol is required');
   }
 
-  const tokenAddress: Address = TOKEN_ADDRESSES[tokenSymbol as TokenKey];
+  const tokenAddress: Address = getTokenAddresses(network === 'base')[tokenSymbol as TokenKey];
   if (!tokenAddress) {
     throw new Error(`Unknown token symbol: ${tokenSymbol}`);
   }
