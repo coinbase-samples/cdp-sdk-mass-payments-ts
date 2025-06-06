@@ -17,11 +17,17 @@
 import { useWallet } from '@/app/context/WalletContext';
 import { tokenDisplayMap, TokenKey } from '@/lib/constants';
 import { useState } from 'react';
+import { SwapModal } from './SwapModal';
+import { getNetworkConfig } from '@/lib/network';
 
 export const WalletInfo = () => {
   const { evmAddress, balances, activeToken, setActiveToken, refreshBalance } =
     useWallet();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
+  const [swapQuote, setSwapQuote] = useState<any>(null);
+  const [swapAmount, setSwapAmount] = useState('');
+  const [isExecutingSwap, setIsExecutingSwap] = useState(false);
 
   const handleFaucetRequest = async () => {
     if (!evmAddress) return;
@@ -44,6 +50,106 @@ export const WalletInfo = () => {
     const coinbasePayUrl = `https://pay.coinbase.com/buy/select-asset?appId=${appId}&addresses={"${evmAddress}":["base"]}&assets=["ETH"]&defaultPaymentMethod=CARD&fiatCurrency=USD&presetFiatAmount=5`;
 
     window.open(coinbasePayUrl, '_blank');
+  };
+
+  const handleSwapRequest = async () => {
+    if (!evmAddress || activeToken === 'eth') return;
+    
+    const ethBalance = balances['eth'] || '0';
+    const amount = prompt(`Enter amount of ETH to swap:\n\nAvailable ETH: ${ethBalance}`);
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return;
+    
+    // Check if amount exceeds balance
+    if (Number(amount) > Number(ethBalance)) {
+      alert(`Insufficient ETH balance. You have ${ethBalance} ETH available.`);
+      return;
+    }
+
+    setSwapAmount(amount);
+    setIsSwapModalOpen(true);
+    setSwapQuote(null);
+
+    try {
+      const res = await fetch('/api/account/swap/quote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          toToken: activeToken,
+          fromAmount: amount,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setSwapQuote(data.quote);
+      } else {
+        const error = await res.json();
+        alert(`Failed to get quote: ${error.error}`);
+        setIsSwapModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Error getting swap quote:', error);
+      alert('Failed to get swap quote');
+      setIsSwapModalOpen(false);
+    }
+  };
+
+  const handleSwapConfirm = async () => {
+    if (!swapQuote) return;
+
+    setIsExecutingSwap(true);
+    try {
+      const res = await fetch('/api/account/swap/execute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          quoteId: swapQuote.quoteId,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const { explorerUrl } = getNetworkConfig();
+        const transactionUrl = `${explorerUrl}/tx/${data.transactionHash}`;
+        
+        // Create a more user-friendly success message with clickable link
+        const confirmed = confirm(
+          `Swap successful!\n\nTransaction Hash: ${data.transactionHash}\n\nClick OK to view on block explorer, or Cancel to close.`
+        );
+        
+        if (confirmed) {
+          window.open(transactionUrl, '_blank');
+        }
+        
+        refreshBalance('eth');
+        refreshBalance(activeToken);
+        setIsSwapModalOpen(false);
+      } else {
+        const error = await res.json();
+        alert(`Swap failed: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error executing swap:', error);
+      alert('Swap execution failed');
+    } finally {
+      setIsExecutingSwap(false);
+    }
+  };
+
+  const closeSwapModal = () => {
+    if (!isExecutingSwap) {
+      setIsSwapModalOpen(false);
+      setSwapQuote(null);
+      setSwapAmount('');
+      
+      // Refresh balances when modal is closed
+      refreshBalance('eth');
+      refreshBalance(activeToken);
+    }
   };
 
   return (
@@ -76,50 +182,75 @@ export const WalletInfo = () => {
               ))}
             </select>
           </div>
-          {process.env.NEXT_PUBLIC_USE_MAINNET !== 'true' ? (
-            <button
-              onClick={handleFaucetRequest}
-              disabled={isLoading}
-              className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 w-fit disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <>
-                  <svg
-                    className="animate-spin h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Requesting...
-                </>
-              ) : (
-                'Request Faucet'
-              )}
-            </button>
-          ) : (
-            <button
-              onClick={handleFundRequest}
-              className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 w-fit hover:bg-blue-600 transition-colors"
-            >
-              Request Funds
-            </button>
-          )}
+          <div className="flex flex-wrap gap-2">
+            {process.env.NEXT_PUBLIC_USE_MAINNET !== 'true' ? (
+              <button
+                onClick={handleFaucetRequest}
+                disabled={isLoading}
+                className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Requesting...
+                  </>
+                ) : (
+                  'Request Faucet'
+                )}
+              </button>
+            ) : (
+              activeToken === 'eth' && (
+                <button
+                  onClick={handleFundRequest}
+                  className="font-bold bg-[#0052ff] text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 w-fit hover:bg-blue-600 transition-colors"
+                >
+                  Request Funds
+                </button>
+              )
+            )}
+            
+            {process.env.NEXT_PUBLIC_USE_MAINNET === 'true' && activeToken !== 'eth' && (
+              <button
+                onClick={handleSwapRequest}
+                disabled={isLoading}
+                className="font-bold bg-green-600 text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 w-fit hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Swap ETH to {tokenDisplayMap[activeToken]}
+              </button>
+            )}
+          </div>
         </div>
       </div>
+      
+      <SwapModal
+        isOpen={isSwapModalOpen}
+        onClose={closeSwapModal}
+        fromToken="eth"
+        toToken={activeToken}
+        fromAmount={swapAmount}
+        quote={swapQuote}
+        onConfirm={handleSwapConfirm}
+        isExecuting={isExecutingSwap}
+      />
     </div>
   );
 };
