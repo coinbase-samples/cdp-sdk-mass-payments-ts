@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 class SwapCache {
   private cache: Map<string, any> = new Map();
 

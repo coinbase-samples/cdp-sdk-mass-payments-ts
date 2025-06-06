@@ -14,16 +14,11 @@
  * limitations under the License.
  */
 
-import { cdpClient } from '@/lib/cdp';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { publicClient } from '@/lib/viem';
 import { swapCache } from '@/lib/swap';
-import { getNetworkConfig } from '@/lib/network';
-import { randomUUID } from 'crypto';
-
-const { network } = getNetworkConfig();
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const session = await getServerSession(authOptions);
@@ -36,10 +31,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const { quoteId } = await request.json();
 
     if (!quoteId) {
-      return NextResponse.json(
-        { error: 'Missing quote ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing quote ID' }, { status: 400 });
     }
 
     // Retrieve the cached swap transaction data
@@ -78,4 +70,4 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       { status: 500 }
     );
   }
-} 
+}

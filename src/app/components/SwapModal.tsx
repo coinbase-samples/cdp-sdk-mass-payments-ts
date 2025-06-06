@@ -54,9 +54,12 @@ export const SwapModal = ({
     if (!quote) return;
 
     const updateTimeLeft = () => {
-      const remaining = Math.max(0, Math.floor((quote.expiresAt - Date.now()) / 1000));
+      const remaining = Math.max(
+        0,
+        Math.floor((quote.expiresAt - Date.now()) / 1000)
+      );
       setTimeLeft(remaining);
-      
+
       // Auto-close if expired
       if (remaining === 0 && !isExecuting) {
         onClose();
@@ -97,15 +100,16 @@ export const SwapModal = ({
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">To (estimated)</span>
                 <span className="font-medium text-green-600">
-                  {quote.toAmount ? (
-                    `~ ${formatUnits(BigInt(quote.toAmount), tokenDecimals[toToken])} ${tokenDisplayMap[toToken]}`
-                  ) : (
-                    `~ ${tokenDisplayMap[toToken]}`
-                  )}
+                  {quote.toAmount
+                    ? `~ ${formatUnits(BigInt(quote.toAmount), tokenDecimals[toToken])} ${tokenDisplayMap[toToken]}`
+                    : `~ ${tokenDisplayMap[toToken]}`}
                 </span>
               </div>
-              <div className={`text-xs mt-2 ${timeLeft < 60 ? 'text-red-500 font-medium' : 'text-gray-500'}`}>
-                Quote expires in {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+              <div
+                className={`text-xs mt-2 ${timeLeft < 60 ? 'text-red-500 font-medium' : 'text-gray-500'}`}
+              >
+                Quote expires in {Math.floor(timeLeft / 60)}:
+                {(timeLeft % 60).toString().padStart(2, '0')}
                 {timeLeft < 60 && timeLeft > 0 && ' ⚠️'}
               </div>
             </div>
@@ -199,4 +203,4 @@ export const SwapModal = ({
       </div>
     </div>
   );
-}; 
+};

@@ -48,13 +48,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const tokenAddresses = getTokenAddresses(network === 'base');
     const toTokenAddress = tokenAddresses[toToken as TokenKey];
     // For ETH swaps, we need to use WETH address on mainnet
-    const fromTokenAddress = tokenAddresses['eth']
+    const fromTokenAddress = tokenAddresses['eth'];
 
     if (!toTokenAddress) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
     }
 
     // Convert amount to wei (ETH has 18 decimals)
@@ -68,10 +65,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       slippageBps: 100, // 1% slippage tolerance
     });
 
-    if (!("transaction" in swapQuote) || !swapQuote.liquidityAvailable) {
-      return NextResponse.json({
-        error: 'No liquidity available for this swap',
-      }, { status: 400 });
+    if (!('transaction' in swapQuote) || !swapQuote.liquidityAvailable) {
+      return NextResponse.json(
+        {
+          error: 'No liquidity available for this swap',
+        },
+        { status: 400 }
+      );
     }
 
     const quoteId = randomUUID();
@@ -79,16 +79,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     swapCache.set(quoteId, swapQuote);
 
     // Convert BigInt values to strings for JSON serialization
-    const serializableQuote = JSON.parse(JSON.stringify(swapQuote, (key, value) =>
-      typeof value === 'bigint' ? value.toString() : value
-    ));
+    const serializableQuote = JSON.parse(
+      JSON.stringify(swapQuote, (key, value) =>
+        typeof value === 'bigint' ? value.toString() : value
+      )
+    );
 
     return NextResponse.json({
       quote: {
         ...serializableQuote,
         quoteId,
         // Note: We're not sending the actual transaction data to the frontend anymore
-        expiresAt: Date.now() + (10 * 60 * 1000), // 10 minutes from now
+        expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes from now
       },
     });
   } catch (error) {
@@ -96,9 +98,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
       {
         error:
-          error instanceof Error ? error.message : 'Failed to generate swap quote',
+          error instanceof Error
+            ? error.message
+            : 'Failed to generate swap quote',
       },
       { status: 500 }
     );
   }
-} 
+}

@@ -25,6 +25,7 @@ export const WalletInfo = () => {
     useWallet();
   const [isLoading, setIsLoading] = useState(false);
   const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [swapQuote, setSwapQuote] = useState<any>(null);
   const [swapAmount, setSwapAmount] = useState('');
   const [isExecutingSwap, setIsExecutingSwap] = useState(false);
@@ -54,11 +55,13 @@ export const WalletInfo = () => {
 
   const handleSwapRequest = async () => {
     if (!evmAddress || activeToken === 'eth') return;
-    
+
     const ethBalance = balances['eth'] || '0';
-    const amount = prompt(`Enter amount of ETH to swap:\n\nAvailable ETH: ${ethBalance}`);
+    const amount = prompt(
+      `Enter amount of ETH to swap:\n\nAvailable ETH: ${ethBalance}`
+    );
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return;
-    
+
     // Check if amount exceeds balance
     if (Number(amount) > Number(ethBalance)) {
       alert(`Insufficient ETH balance. You have ${ethBalance} ETH available.`);
@@ -115,16 +118,16 @@ export const WalletInfo = () => {
         const data = await res.json();
         const { explorerUrl } = getNetworkConfig();
         const transactionUrl = `${explorerUrl}/tx/${data.transactionHash}`;
-        
+
         // Create a more user-friendly success message with clickable link
         const confirmed = confirm(
           `Swap successful!\n\nTransaction Hash: ${data.transactionHash}\n\nClick OK to view on block explorer, or Cancel to close.`
         );
-        
+
         if (confirmed) {
           window.open(transactionUrl, '_blank');
         }
-        
+
         refreshBalance('eth');
         refreshBalance(activeToken);
         setIsSwapModalOpen(false);
@@ -145,7 +148,7 @@ export const WalletInfo = () => {
       setIsSwapModalOpen(false);
       setSwapQuote(null);
       setSwapAmount('');
-      
+
       // Refresh balances when modal is closed
       refreshBalance('eth');
       refreshBalance(activeToken);
@@ -227,20 +230,21 @@ export const WalletInfo = () => {
                 </button>
               )
             )}
-            
-            {process.env.NEXT_PUBLIC_USE_MAINNET === 'true' && activeToken !== 'eth' && (
-              <button
-                onClick={handleSwapRequest}
-                disabled={isLoading}
-                className="font-bold bg-green-600 text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 w-fit hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Swap ETH to {tokenDisplayMap[activeToken]}
-              </button>
-            )}
+
+            {process.env.NEXT_PUBLIC_USE_MAINNET === 'true' &&
+              activeToken !== 'eth' && (
+                <button
+                  onClick={handleSwapRequest}
+                  disabled={isLoading}
+                  className="font-bold bg-green-600 text-white rounded-[30px] border-none outline-none cursor-pointer px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 w-fit hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Swap ETH to {tokenDisplayMap[activeToken]}
+                </button>
+              )}
           </div>
         </div>
       </div>
-      
+
       <SwapModal
         isOpen={isSwapModalOpen}
         onClose={closeSwapModal}
