@@ -89,7 +89,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       quote: {
         ...serializableQuote,
         quoteId,
-        // Note: We're not sending the actual transaction data to the frontend anymore
         expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes from now
       },
     });

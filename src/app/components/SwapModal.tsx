@@ -17,6 +17,7 @@
 import { tokenDisplayMap, TokenKey, tokenDecimals } from '@/lib/constants';
 import { useState, useEffect } from 'react';
 import { formatUnits } from 'viem';
+import { getNetworkConfig } from '@/lib/network';
 
 interface SwapQuote {
   quoteId: string;
@@ -36,6 +37,8 @@ interface SwapModalProps {
   quote: SwapQuote | null;
   onConfirm: () => void;
   isExecuting: boolean;
+  isSuccess?: boolean;
+  transactionHash?: string;
 }
 
 export const SwapModal = ({
@@ -47,6 +50,8 @@ export const SwapModal = ({
   quote,
   onConfirm,
   isExecuting,
+  isSuccess = false,
+  transactionHash,
 }: SwapModalProps) => {
   const [timeLeft, setTimeLeft] = useState(0);
 
@@ -88,7 +93,38 @@ export const SwapModal = ({
           </button>
         </div>
 
-        {quote ? (
+        {isSuccess && transactionHash ? (
+          <div className="space-y-4 text-center">
+            <div className="bg-green-50 rounded-lg p-4">
+              <div className="text-green-600 mb-2">
+                <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-green-800 mb-2">Swap Successful!</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Successfully swapped {fromAmount} {tokenDisplayMap[fromToken]} to {tokenDisplayMap[toToken]}
+              </p>
+              <div className="text-xs text-gray-500">
+                <p className="mb-1">Transaction Hash:</p>
+                <a
+                  href={`${getNetworkConfig().explorerUrl}/tx/${transactionHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline break-all font-mono"
+                >
+                  {transactionHash}
+                </a>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-full bg-[#0052ff] text-white rounded-lg px-4 py-2 font-medium hover:bg-blue-600 transition-colors"
+            >
+              OK
+            </button>
+          </div>
+        ) : quote ? (
           <div className="space-y-4">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex justify-between items-center mb-2">

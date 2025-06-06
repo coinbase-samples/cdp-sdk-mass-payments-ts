@@ -29,6 +29,8 @@ export const WalletInfo = () => {
   const [swapQuote, setSwapQuote] = useState<any>(null);
   const [swapAmount, setSwapAmount] = useState('');
   const [isExecutingSwap, setIsExecutingSwap] = useState(false);
+  const [swapSuccess, setSwapSuccess] = useState(false);
+  const [transactionHash, setTransactionHash] = useState<string>('');
 
   const handleFaucetRequest = async () => {
     if (!evmAddress) return;
@@ -114,23 +116,13 @@ export const WalletInfo = () => {
         }),
       });
 
-      if (res.ok) {
+            if (res.ok) {
         const data = await res.json();
-        const { explorerUrl } = getNetworkConfig();
-        const transactionUrl = `${explorerUrl}/tx/${data.transactionHash}`;
-
-        // Create a more user-friendly success message with clickable link
-        const confirmed = confirm(
-          `Swap successful!\n\nTransaction Hash: ${data.transactionHash}\n\nClick OK to view on block explorer, or Cancel to close.`
-        );
-
-        if (confirmed) {
-          window.open(transactionUrl, '_blank');
-        }
-
+        setTransactionHash(data.transactionHash);
+        setSwapSuccess(true);
+        
         refreshBalance('eth');
         refreshBalance(activeToken);
-        setIsSwapModalOpen(false);
       } else {
         const error = await res.json();
         alert(`Swap failed: ${error.error}`);
@@ -143,12 +135,14 @@ export const WalletInfo = () => {
     }
   };
 
-  const closeSwapModal = () => {
+    const closeSwapModal = () => {
     if (!isExecutingSwap) {
       setIsSwapModalOpen(false);
       setSwapQuote(null);
       setSwapAmount('');
-
+      setSwapSuccess(false);
+      setTransactionHash('');
+      
       // Refresh balances when modal is closed
       refreshBalance('eth');
       refreshBalance(activeToken);
@@ -254,6 +248,8 @@ export const WalletInfo = () => {
         quote={swapQuote}
         onConfirm={handleSwapConfirm}
         isExecuting={isExecutingSwap}
+        isSuccess={swapSuccess}
+        transactionHash={transactionHash}
       />
     </div>
   );
