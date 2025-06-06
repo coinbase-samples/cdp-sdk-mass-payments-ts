@@ -20,12 +20,10 @@ import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 
-export async function GET(
-  req: NextRequest,
-) {
-  const session = await getServerSession(authOptions)
+export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions);
 
-  const account = await cdpClient.evm.getAccount({ name: session!.user.id })
+  const account = await cdpClient.evm.getAccount({ name: session!.user.id });
 
   const token = req.nextUrl.searchParams.get('token');
 
@@ -34,6 +32,9 @@ export async function GET(
     return NextResponse.json({ balance });
   } catch (error) {
     console.error('Error fetching balance:', error);
-    return NextResponse.json({ error: 'Failed to fetch balance' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch balance' },
+      { status: 500 }
+    );
   }
 }

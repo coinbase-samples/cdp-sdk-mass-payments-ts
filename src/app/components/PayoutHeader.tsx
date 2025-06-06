@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import Image from 'next/image'
-import AccountDropdown from './AccountDropdown'
+import Image from 'next/image';
+import AccountDropdown from './AccountDropdown';
 
 export const PayoutHeader = () => {
   return (
@@ -32,5 +32,5 @@ export const PayoutHeader = () => {
         <AccountDropdown />
       </div>
     </div>
-  )
-} 
+  );
+};

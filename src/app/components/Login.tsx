@@ -14,35 +14,35 @@
  * limitations under the License.
  */
 
-'use client'
+'use client';
 
-import { signIn } from 'next-auth/react'
-import { useState } from 'react'
+import { signIn } from 'next-auth/react';
+import { useState } from 'react';
 
 export const Login = () => {
-  const [isSigning, setIsSigning] = useState(false)
-  const [signInProvider, setSignInProvider] = useState<'google' | 'github' | null>(null)
+  const [isSigning, setIsSigning] = useState(false);
+  const [signInProvider, setSignInProvider] = useState<
+    'google' | 'github' | null
+  >(null);
 
   const handleSignIn = async (provider: 'google' | 'github') => {
     try {
-      setIsSigning(true)
-      setSignInProvider(provider)
-      await signIn(provider, { callbackUrl: '/' })
+      setIsSigning(true);
+      setSignInProvider(provider);
+      await signIn(provider, { callbackUrl: '/' });
     } catch (err) {
-      console.error(`${provider} login failed:`, err)
+      console.error(`${provider} login failed:`, err);
     } finally {
-      setIsSigning(false)
-      setSignInProvider(null)
+      setIsSigning(false);
+      setSignInProvider(null);
     }
-  }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-lg">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Sign In
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Sign In</h1>
           <p className="mt-2 text-sm text-gray-600">
             Sign in to access the application
           </p>
@@ -96,7 +96,11 @@ export const Login = () => {
               </>
             ) : (
               <>
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <svg
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
                   <path
                     fillRule="evenodd"
                     clipRule="evenodd"
@@ -110,8 +114,8 @@ export const Login = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const Spinner = () => (
   <svg
@@ -137,5 +141,4 @@ const Spinner = () => (
       5.824 3 7.938l3-2.647z"
     ></path>
   </svg>
-)
-
+);

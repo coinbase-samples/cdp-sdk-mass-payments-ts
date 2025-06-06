@@ -15,7 +15,7 @@
  */
 
 import { createHash } from 'crypto';
-import { sql } from "@/lib/db/neon";
+import { sql } from '@/lib/db/neon';
 
 export type UserDetails = {
   userId: string;
@@ -23,7 +23,9 @@ export type UserDetails = {
   partnerIds: string[];
 };
 
-export async function getUserByEmailHash(sha256Email: string): Promise<UserDetails | null> {
+export async function getUserByEmailHash(
+  sha256Email: string
+): Promise<UserDetails | null> {
   const result = await sql`
     SELECT user_id, sha256_email, partner_ids
     FROM user_details
@@ -41,7 +43,10 @@ export async function getUserByEmailHash(sha256Email: string): Promise<UserDetai
   return null;
 }
 
-export async function createUser(sha256Email: string, partnerId: string): Promise<UserDetails> {
+export async function createUser(
+  sha256Email: string,
+  partnerId: string
+): Promise<UserDetails> {
   const result = await sql`
     INSERT INTO user_details (sha256_email, partner_ids)
     VALUES (${sha256Email}, ARRAY[${partnerId}])
@@ -55,7 +60,10 @@ export async function createUser(sha256Email: string, partnerId: string): Promis
   };
 }
 
-export async function addPartnerId(sha256Email: string, partnerId: string): Promise<UserDetails | null> {
+export async function addPartnerId(
+  sha256Email: string,
+  partnerId: string
+): Promise<UserDetails | null> {
   const result = await sql`
     UPDATE user_details
     SET partner_ids = array_append(partner_ids, ${partnerId})
@@ -76,13 +84,9 @@ export async function addPartnerId(sha256Email: string, partnerId: string): Prom
 }
 
 export function hashEmail(email: string): string {
-  return createHash('sha256')
-    .update(email.toLowerCase())
-    .digest('hex');
+  return createHash('sha256').update(email.toLowerCase()).digest('hex');
 }
 
 export function createPartnerId(provider: string, accountId: string): string {
-  return createHash('sha256')
-    .update(`${provider}-${accountId}`)
-    .digest('hex');
-} 
+  return createHash('sha256').update(`${provider}-${accountId}`).digest('hex');
+}

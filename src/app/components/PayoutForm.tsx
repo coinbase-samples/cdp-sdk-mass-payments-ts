@@ -14,98 +14,116 @@
  * limitations under the License.
  */
 
-import { useState, useRef } from 'react'
-import { useWallet } from '@/app/context/WalletContext'
-import { TransferResponseModal } from '@/app/components/TransferResponseModal'
-import { TransferRecipient, TransferResponse } from '@/lib/types/transfer'
+import { useState, useRef } from 'react';
+import { useWallet } from '@/app/context/WalletContext';
+import { TransferResponseModal } from '@/app/components/TransferResponseModal';
+import { TransferRecipient, TransferResponse } from '@/lib/types/transfer';
 
-const MAX_ROWS = 100
+const MAX_ROWS = 100;
 
 // Email validation regex
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const PayoutForm = () => {
-  const { activeToken, refreshBalance, evmAddress } = useWallet()
-  const [payoutRows, setPayoutRows] = useState<TransferRecipient[]>([{ recipientId: '', amount: '' }])
-  const [error, setError] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showResults, setShowResults] = useState(false)
-  const [transferResponse, setTransferResponse] = useState<TransferResponse | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { activeToken, refreshBalance, evmAddress } = useWallet();
+  const [payoutRows, setPayoutRows] = useState<TransferRecipient[]>([
+    { recipientId: '', amount: '' },
+  ]);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [transferResponse, setTransferResponse] =
+    useState<TransferResponse | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateEmails = (rows: TransferRecipient[]) => {
     const invalidEmails = rows
       .map((row, index) => ({ email: row.recipientId, index }))
-      .filter(({ email }) => email && !EMAIL_REGEX.test(email))
+      .filter(({ email }) => email && !EMAIL_REGEX.test(email));
 
     if (invalidEmails.length > 0) {
-      setError(`Invalid email format in row ${invalidEmails[0].index + 1}: ${invalidEmails[0].email}`)
-      return false
+      setError(
+        `Invalid email format in row ${invalidEmails[0].index + 1}: ${invalidEmails[0].email}`
+      );
+      return false;
     }
-    return true
-  }
+    return true;
+  };
 
   const addRow = () => {
     if (payoutRows.length >= MAX_ROWS) {
-      setError(`Maximum of ${MAX_ROWS} rows allowed`)
-      return
+      setError(`Maximum of ${MAX_ROWS} rows allowed`);
+      return;
     }
-    setPayoutRows([...payoutRows, { recipientId: '', amount: '' }])
-    setError(null)
-  }
+    setPayoutRows([...payoutRows, { recipientId: '', amount: '' }]);
+    setError(null);
+  };
 
-  const updateRow = (index: number, field: keyof TransferRecipient, value: string) => {
-    const newRows = [...payoutRows]
-    newRows[index][field] = value
-    setPayoutRows(newRows)
-    setError(null)
-  }
+  const updateRow = (
+    index: number,
+    field: keyof TransferRecipient,
+    value: string
+  ) => {
+    const newRows = [...payoutRows];
+    newRows[index][field] = value;
+    setPayoutRows(newRows);
+    setError(null);
+  };
 
   const removeRow = (index: number) => {
     if (payoutRows.length > 1) {
-      setPayoutRows(payoutRows.filter((_, i) => i !== index))
-      setError(null)
+      setPayoutRows(payoutRows.filter((_, i) => i !== index));
+      setError(null);
     } else {
-      setPayoutRows([{ recipientId: '', amount: '' }])
+      setPayoutRows([{ recipientId: '', amount: '' }]);
     }
-  }
+  };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const text = e.target?.result as string
-        const rows = text.split('\n').map(row => row.trim()).filter(row => row)
+        const text = e.target?.result as string;
+        const rows = text
+          .split('\n')
+          .map((row) => row.trim())
+          .filter((row) => row);
 
         // Skip header row if it exists
-        const dataRows = rows[0].includes('recipientId') ? rows.slice(1) : rows
+        const dataRows = rows[0].includes('recipientId') ? rows.slice(1) : rows;
 
         if (dataRows.length > MAX_ROWS) {
-          setError(`CSV contains too many rows. Maximum allowed is ${MAX_ROWS}`)
-          return
+          setError(
+            `CSV contains too many rows. Maximum allowed is ${MAX_ROWS}`
+          );
+          return;
         }
 
-        const parsedRows = dataRows.map(row => {
-          const [recipientId, amount] = row.split(',').map(cell => cell.trim())
-          return { recipientId, amount }
-        })
+        const parsedRows = dataRows.map((row) => {
+          const [recipientId, amount] = row
+            .split(',')
+            .map((cell) => cell.trim());
+          return { recipientId, amount };
+        });
 
         if (!validateEmails(parsedRows)) {
-          return
+          return;
         }
 
-        setPayoutRows(parsedRows)
-        setError(null)
+        setPayoutRows(parsedRows);
+        setError(null);
       } catch (err) {
-        console.error('Error parsing CSV:', err)
-        setError('Error parsing CSV file. Please ensure it has the correct format: recipientId,amount')
+        console.error('Error parsing CSV:', err);
+        setError(
+          'Error parsing CSV file. Please ensure it has the correct format: recipientId,amount'
+        );
       }
-    }
-    reader.readAsText(file)
-  }
+    };
+    reader.readAsText(file);
+  };
 
   const handleConfirm = async () => {
     if (isSubmitting) return;
@@ -130,9 +148,9 @@ export const PayoutForm = () => {
         },
         body: JSON.stringify({
           token: activeToken,
-          recipients: payoutRows
+          recipients: payoutRows,
         }),
-      })
+      });
 
       if (!response.ok) {
         const errData = await response.json();
@@ -150,11 +168,13 @@ export const PayoutForm = () => {
       }
     } catch (error) {
       console.error('Transfer error:', error);
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+      setError(
+        error instanceof Error ? error.message : 'An unexpected error occurred'
+      );
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="w-full p-4">
@@ -200,7 +220,9 @@ export const PayoutForm = () => {
                 type="email"
                 placeholder="Recipient Email"
                 value={row.recipientId}
-                onChange={(e) => updateRow(index, 'recipientId', e.target.value)}
+                onChange={(e) =>
+                  updateRow(index, 'recipientId', e.target.value)
+                }
                 className="flex-1 p-1 sm:p-2 border rounded text-sm sm:text-base min-w-0 disabled:opacity-50"
                 disabled={isSubmitting}
               />
@@ -234,9 +256,25 @@ export const PayoutForm = () => {
         >
           {isSubmitting ? (
             <>
-              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                className="animate-spin h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
               Processing...
             </>
@@ -252,5 +290,5 @@ export const PayoutForm = () => {
         response={transferResponse}
       />
     </div>
-  )
-} 
+  );
+};

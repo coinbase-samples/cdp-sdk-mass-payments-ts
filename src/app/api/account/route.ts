@@ -14,21 +14,25 @@
  * limitations under the License.
  */
 
-import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
-import { getServerSession } from "next-auth";
-import { cdpClient } from "@/lib/cdp";
+import { NextResponse } from 'next/server';
+import { authOptions } from '@/lib/auth';
+import { getServerSession } from 'next-auth';
+import { cdpClient } from '@/lib/cdp';
 
 export async function GET() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions);
 
   try {
+    const account = await cdpClient.evm.getOrCreateAccount({
+      name: session!.user.id,
+    });
 
-    const account = await cdpClient.evm.getOrCreateAccount({ name: session!.user.id })
-
-    return NextResponse.json({ address: account.address })
+    return NextResponse.json({ address: account.address });
   } catch (error) {
-    console.error("Error creating wallet:", error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    console.error('Error creating wallet:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }

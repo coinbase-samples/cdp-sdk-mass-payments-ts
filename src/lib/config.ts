@@ -60,7 +60,10 @@ const validateEnv = (): EnvConfig => {
 
   for (const envVar of requiredEnvVars) {
     // Skip RPC URL validation here as we'll handle it separately
-    if (envVar === 'BASE_SEPOLIA_NODE_URL' || envVar === 'BASE_MAINNET_NODE_URL') {
+    if (
+      envVar === 'BASE_SEPOLIA_NODE_URL' ||
+      envVar === 'BASE_MAINNET_NODE_URL'
+    ) {
       continue;
     }
 

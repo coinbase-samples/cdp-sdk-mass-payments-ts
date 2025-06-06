@@ -14,36 +14,39 @@
  * limitations under the License.
  */
 
-'use client'
+'use client';
 
-import { useEffect, useRef, useState } from 'react'
-import { signOut, useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react';
+import { signOut, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function AccountDropdown() {
-  const { data: session } = useSession()
-  const router = useRouter()
-  const [isOpen, setIsOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const displayName = session?.user?.email || 'User'
+  const displayName = session?.user?.email || 'User';
 
   const handleSignOut = async () => {
-    await signOut({ redirect: false })
-    router.replace('/')
-  }
+    await signOut({ redirect: false });
+    router.replace('/');
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
       }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  if (!session?.user) return null
+  if (!session?.user) return null;
 
   return (
     <div className="relative inline-block text-left" ref={dropdownRef}>
@@ -65,6 +68,5 @@ export default function AccountDropdown() {
         </div>
       )}
     </div>
-  )
+  );
 }
-

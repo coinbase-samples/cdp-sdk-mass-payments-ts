@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react';
 import { TransferRecipient, TransferResponse } from '@/lib/types/transfer';
 import { getNetworkConfig } from '@/lib/network';
 
@@ -24,8 +24,16 @@ interface TransferResponseModalProps {
   response: TransferResponse | null;
 }
 
-const RecipientCard = ({ recipient, isSuccess }: { recipient: TransferRecipient, isSuccess: boolean }) => (
-  <div className={`p-3 rounded ${isSuccess ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+const RecipientCard = ({
+  recipient,
+  isSuccess,
+}: {
+  recipient: TransferRecipient;
+  isSuccess: boolean;
+}) => (
+  <div
+    className={`p-3 rounded ${isSuccess ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+  >
     <div className="font-semibold">{isSuccess ? 'Success' : 'Failed'}</div>
     <div>Recipient ID: {recipient.recipientId}</div>
     {isSuccess && recipient.amount && <div>Amount: {recipient.amount}</div>}
@@ -36,21 +44,25 @@ const TransactionLink = ({ hash }: { hash: string }) => {
   const { explorerUrl } = getNetworkConfig();
 
   return (
-  <div>
-    Transaction:{" "}
-    <a
-      href={`${explorerUrl}/tx/${hash}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-blue-600 hover:underline"
-    >
-      {hash.slice(0, 6)}...{hash.slice(-4)}
-    </a>
-  </div>
-)
+    <div>
+      Transaction:{' '}
+      <a
+        href={`${explorerUrl}/tx/${hash}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:underline"
+      >
+        {hash.slice(0, 6)}...{hash.slice(-4)}
+      </a>
+    </div>
+  );
 };
 
-export const TransferResponseModal = ({ isOpen, onClose, response }: TransferResponseModalProps) => {
+export const TransferResponseModal = ({
+  isOpen,
+  onClose,
+  response,
+}: TransferResponseModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -81,7 +93,10 @@ export const TransferResponseModal = ({ isOpen, onClose, response }: TransferRes
 
   return (
     <div className="fixed inset-0 flex items-start justify-center z-50 pt-16">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto shadow-2xl" ref={modalRef}>
+      <div
+        className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto shadow-2xl"
+        ref={modalRef}
+      >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Transfer Results</h2>
           <button
@@ -89,27 +104,47 @@ export const TransferResponseModal = ({ isOpen, onClose, response }: TransferRes
             className="text-gray-500 hover:text-gray-700"
             aria-label="Close modal"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
         <div className="space-y-4">
-          <h3 className={`font-medium mb-2 ${isSuccess ? 'text-green-600' : 'text-red-600'}`}>
+          <h3
+            className={`font-medium mb-2 ${isSuccess ? 'text-green-600' : 'text-red-600'}`}
+          >
             {isSuccess ? 'Successful Transfer' : 'Failed Transfer'}
           </h3>
 
           {hasRecipients && (
             <div className="space-y-2">
               {response.recipients.map((recipient, index) => (
-                <RecipientCard key={index} recipient={recipient} isSuccess={isSuccess} />
+                <RecipientCard
+                  key={index}
+                  recipient={recipient}
+                  isSuccess={isSuccess}
+                />
               ))}
             </div>
           )}
 
-          {isSuccess && response.result?.hash && <TransactionLink hash={response.result.hash} />}
-          {!isSuccess && response.result?.error && <div className="text-red-600">Error: {response.result.error}</div>}
+          {isSuccess && response.result?.hash && (
+            <TransactionLink hash={response.result.hash} />
+          )}
+          {!isSuccess && response.result?.error && (
+            <div className="text-red-600">Error: {response.result.error}</div>
+          )}
         </div>
 
         <div className="mt-6 flex justify-end">
@@ -123,4 +158,4 @@ export const TransferResponseModal = ({ isOpen, onClose, response }: TransferRes
       </div>
     </div>
   );
-}; 
+};

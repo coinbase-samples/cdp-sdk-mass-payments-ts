@@ -33,4 +33,4 @@ export class InsufficientGasError extends Error {
     super(message);
     this.name = 'InsufficientGasError';
   }
-} 
+}

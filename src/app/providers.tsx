@@ -36,16 +36,13 @@ export const wagmiConfig = createConfig({
 const queryClient = new QueryClient();
 
 export function Providers({ children }: { children: React.ReactNode }) {
-
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <SessionProvider>
-          <WalletProvider>
-            {children}
-          </WalletProvider>
+          <WalletProvider>{children}</WalletProvider>
         </SessionProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
-} 
+}
