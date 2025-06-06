@@ -17,7 +17,6 @@
 import { useWallet } from '@/app/context/WalletContext';
 import { tokenDisplayMap, TokenKey } from '@/lib/constants';
 import { useState } from 'react';
-import { config } from '@/lib/config';
 
 export const WalletInfo = () => {
   const { evmAddress, balances, activeToken, setActiveToken, refreshBalance } =
@@ -67,7 +66,7 @@ export const WalletInfo = () => {
               ))}
             </select>
           </div>
-          {config.USE_MAINNET !== 'true' && (
+          {process.env.NEXT_PUBLIC_USE_MAINNET !== 'true' && (
             <button
               onClick={handleFaucetRequest}
               disabled={isLoading}

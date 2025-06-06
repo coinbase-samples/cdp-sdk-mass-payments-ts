@@ -15,9 +15,8 @@
  */
 
 import { neon, neonConfig } from '@neondatabase/serverless';
-import { config } from '@/lib/config';
 
-if (config.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === 'development') {
   neonConfig.fetchEndpoint = (host) => {
     const [protocol, port] =
       host === 'db.localtest.me' ? ['http', 4444] : ['https', 443];
@@ -25,4 +24,4 @@ if (config.NODE_ENV === 'development') {
   };
 }
 
-export const sql = neon(config.DATABASE_URL);
+export const sql = neon(process.env.DATABASE_URL!);

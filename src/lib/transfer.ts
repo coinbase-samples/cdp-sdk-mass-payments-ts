@@ -17,7 +17,6 @@
 import { CdpClient } from '@coinbase/cdp-sdk';
 import { TransferParams, TransferResult } from '@/lib/types/transfer';
 import { TOKEN_ADDRESSES, TokenKey } from '@/lib/constants';
-import { config } from './config';
 import GasliteDrop from '@/contracts/GasliteDrop.json';
 import { encodeFunctionData } from 'viem';
 import { randomUUID } from 'crypto';
@@ -27,9 +26,9 @@ import { getNetworkConfig } from '@/lib/network';
 const { network } = getNetworkConfig();
 
 const cdpClient = new CdpClient({
-  apiKeyId: config.CDP_API_KEY_ID,
-  apiKeySecret: config.CDP_API_KEY_SECRET,
-  walletSecret: config.CDP_WALLET_SECRET,
+  apiKeyId: process.env.CDP_API_KEY_ID,
+  apiKeySecret: process.env.CDP_API_KEY_SECRET,
+  walletSecret: process.env.CDP_WALLET_SECRET,
 });
 
 export async function executeTransfers(
@@ -47,7 +46,7 @@ export async function executeTransfers(
   );
 
   try {
-    const contractAddress = config.GASLITE_DROP_ADDRESS;
+    const contractAddress = process.env.GASLITE_DROP_ADDRESS;
     const functionName = token === 'eth' ? 'airdropETH' : 'airdropERC20';
     const args =
       token === 'eth'

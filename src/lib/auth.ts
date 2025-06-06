@@ -17,7 +17,6 @@
 import { AuthOptions, SessionStrategy } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import GithubProvider from 'next-auth/providers/github';
-import { config } from '@/lib/config';
 import {
   createUser,
   getUserByEmailHash,
@@ -33,18 +32,18 @@ declare module 'next-auth/jwt' {
 }
 
 const providers = [];
-if (config.GOOGLE_CLIENT_ID)
+if (process.env.GOOGLE_CLIENT_ID)
   providers.push(
     GoogleProvider({
-      clientId: config.GOOGLE_CLIENT_ID!,
-      clientSecret: config.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     })
   );
-if (config.GITHUB_CLIENT_ID)
+if (process.env.GITHUB_CLIENT_ID)
   providers.push(
     GithubProvider({
-      clientId: config.GITHUB_CLIENT_ID!,
-      clientSecret: config.GITHUB_CLIENT_SECRET!,
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
     })
   );
 
@@ -53,7 +52,7 @@ export const authOptions: AuthOptions = {
   session: {
     strategy: 'jwt' as SessionStrategy,
   },
-  secret: config.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async signIn({ user, account }) {
       if (!user.email || !account) return false;
