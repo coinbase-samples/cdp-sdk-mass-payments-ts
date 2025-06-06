@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { CdpClient } from "@coinbase/cdp-sdk";
+import { CdpClient } from '@coinbase/cdp-sdk';
 import { config } from '@/lib/config';
-import { RequestFaucetParams } from "@/lib/types/cdp";
-import { baseSepolia } from "viem/chains";
-import { publicClient } from "@/lib/viem";
+import { RequestFaucetParams } from '@/lib/types/cdp';
+import { baseSepolia } from 'viem/chains';
+import { publicClient } from '@/lib/viem';
 
 export const cdpClient: CdpClient = new CdpClient({
   apiKeyId: config.CDP_API_KEY_ID,

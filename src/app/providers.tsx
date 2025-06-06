@@ -18,15 +18,17 @@
 
 import { createConfig, http, WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { baseSepolia } from 'viem/chains';
 import { coinbaseWallet } from 'wagmi/connectors';
 import { SessionProvider } from 'next-auth/react';
 import { WalletProvider } from './context/WalletContext';
+import { getNetworkConfig } from '@/lib/network';
+
+const { chain, rpcUrl } = getNetworkConfig();
 
 export const wagmiConfig = createConfig({
-  chains: [baseSepolia],
+  chains: [chain],
   transports: {
-    [baseSepolia.id]: http(),
+    [chain.id]: http(rpcUrl),
   },
   connectors: [coinbaseWallet()],
 });

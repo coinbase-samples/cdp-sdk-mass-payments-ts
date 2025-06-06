@@ -16,6 +16,7 @@
 
 import { useEffect, useRef } from 'react'
 import { TransferRecipient, TransferResponse } from '@/lib/types/transfer';
+import { getNetworkConfig } from '@/lib/network';
 
 interface TransferResponseModalProps {
   isOpen: boolean;
@@ -31,11 +32,14 @@ const RecipientCard = ({ recipient, isSuccess }: { recipient: TransferRecipient,
   </div>
 );
 
-const TransactionLink = ({ hash }: { hash: string }) => (
+const TransactionLink = ({ hash }: { hash: string }) => {
+  const { explorerUrl } = getNetworkConfig();
+
+  return (
   <div>
     Transaction:{" "}
     <a
-      href={`https://sepolia.basescan.org/tx/${hash}`}
+      href={`${explorerUrl}/tx/${hash}`}
       target="_blank"
       rel="noopener noreferrer"
       className="text-blue-600 hover:underline"
@@ -43,7 +47,8 @@ const TransactionLink = ({ hash }: { hash: string }) => (
       {hash.slice(0, 6)}...{hash.slice(-4)}
     </a>
   </div>
-);
+)
+};
 
 export const TransferResponseModal = ({ isOpen, onClose, response }: TransferResponseModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);

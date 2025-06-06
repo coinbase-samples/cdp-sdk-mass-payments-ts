@@ -16,7 +16,7 @@
 
 import { cdpClient, requestFaucetFunds } from '@/lib/cdp';
 import { NextRequest, NextResponse } from 'next/server';
-import { isTokenKey } from '@/lib/constant';
+import { isTokenKey } from '@/lib/constants';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { TokenKey } from '@/lib/constant';
+import { TokenKey } from '@/lib/constants';
 import { EvmServerAccount } from '@coinbase/cdp-sdk';
 
 export type TransferRequest = {
