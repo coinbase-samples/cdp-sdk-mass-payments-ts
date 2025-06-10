@@ -119,12 +119,14 @@ export const WalletInfo = () => {
         const data = await res.json();
         setTransactionHash(data.transactionHash);
         setSwapSuccess(true);
+        setSwapQuote(null);
 
         refreshBalance('eth');
         refreshBalance(activeToken);
       } else {
         const error = await res.json();
         alert(`Swap failed: ${error.error}`);
+        setSwapQuote(null);
       }
     } catch (error) {
       console.error('Error executing swap:', error);
