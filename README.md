@@ -50,7 +50,7 @@ Note: you will need to have your Base Sepolia wallet private key in your env as 
 1. Clone the repository:
 
 ```sh
-git clone https://github.com/coinbase-samples/coinbase-samples/cdp-sdk-mass-payments-ts.git
+git clone https://github.com/coinbase-samples/cdp-sdk-mass-payments-ts.git
 cd cdp-sdk-mass-payments-ts
 ```
 
