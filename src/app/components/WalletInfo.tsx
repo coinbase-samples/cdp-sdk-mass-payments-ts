@@ -49,7 +49,7 @@ export const WalletInfo = () => {
 
     const appId = process.env.NEXT_PUBLIC_COINBASE_ONRAMP_APP_ID || '';
 
-    const coinbasePayUrl = `https://pay.coinbase.com/buy/select-asset?appId=${appId}&addresses={"${evmAddress}":["base"]}&assets=["ETH"]&defaultPaymentMethod=CARD&fiatCurrency=USD&presetFiatAmount=5`;
+    const coinbasePayUrl = `https://pay.coinbase.com/buy/select-asset?appId=${appId}&addresses={"${evmAddress}":["base"]}&assets=["ETH"]&defaultPaymentMethod=CARD&fiatCurrency=USD&presetFiatAmount=5&partner_user_ref=testId`;
 
     window.open(coinbasePayUrl, '_blank');
   };

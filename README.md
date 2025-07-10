@@ -8,7 +8,7 @@
 A demo application of developer-custodied server wallet payments tool using the new [CDP Wallet API v2](https://docs.cdp.coinbase.com/wallet-api-v2/docs/welcome). Users can sign in with their email (currently powered by Google or Github) and send funds to other emails. All emails are backed by Coinbase Server Wallets running on Base Sepolia.
 
 ## Warning
-This is an example of developer custodial wallet usage. This is only intended for testing and demo usage. If you hold assets on behalf of clients you may accept regulatory risk. Please consult the laws of your jurisdiction before implementing a system like this.
+This sample application is a custodial solution intended for demonstration purposes only.
 
 ## License
 
