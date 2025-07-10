@@ -32,4 +32,9 @@
 body {
   background: var(--background);
   color: var(--foreground);
+  height: 100%;
+}
+
+html {
+  height: 100%;
 }
