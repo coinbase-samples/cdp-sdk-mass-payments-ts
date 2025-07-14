@@ -30,7 +30,7 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <div className="flex-grow pt-20 pb-32">
+      <div className="flex-grow pt-5 pb-32">
         {session?.user ? <Payout /> : <Login />}
       </div>
       <Footer />
