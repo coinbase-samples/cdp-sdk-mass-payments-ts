@@ -20,6 +20,7 @@ import { Header } from './components/Header';
 import { Payout } from './components/Payout';
 import { Login } from './components/Login';
 import { useSession } from 'next-auth/react';
+import { Footer } from './components/Footer';
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -29,7 +30,10 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      {session?.user ? <Payout /> : <Login />}
+      <div className="flex-grow pt-5 pb-32">
+        {session?.user ? <Payout /> : <Login />}
+      </div>
+      <Footer />
     </div>
   );
 }
