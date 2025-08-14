@@ -7,6 +7,9 @@
 
 A demo application of developer-custodied server wallet payments tool using the new [CDP Wallet API v2](https://docs.cdp.coinbase.com/wallet-api-v2/docs/welcome). Users can sign in with their email (currently powered by Google or Github) and send funds to other emails. All emails are backed by Coinbase Server Wallets running on Base Sepolia.
 
+## Warning
+This sample application is a custodial solution intended for demonstration purposes only.
+
 ## License
 
 The *CDP Mass Payments App* is free and open source and released under the [Apache License, Version 2.0](LICENSE).
